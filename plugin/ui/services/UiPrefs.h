@@ -55,7 +55,6 @@ public:
   void removeListener(Listener* l) { listeners.remove(l); }
 
   // Keys shared by more than one component.
-  static constexpr const char* kShowHints = "t3k.showHints";
   static constexpr const char* kShowBlockNormalizeControl = "t3k.showBlockNormalizeControl";
   static constexpr const char* kShowBlockSizeControl = "t3k.showBlockSizeControl";
   // Faceplate effect groups (view only; a powered effect shows regardless).

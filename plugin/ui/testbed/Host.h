@@ -26,7 +26,7 @@ public:
 
   PluginRoot& pluginRoot() { return *root; }
 
-  void setExtraContentHeight(int total, int) override;
+  void setExtraContentHeight(int total) override;
   void resized() override;
   void paint(juce::Graphics& g) override { g.fillAll(juce::Colours::black); }
 

@@ -164,7 +164,7 @@ std::vector<Phase> phases() {
   std::vector<Phase> list;
 
   list.push_back({"idle", "chain view, no signal: the floor (timers only, nothing moves)", "main-mono", false});
-  list.push_back({"gallery", "chain view playing: meters, tile glows, clip LEDs, CPU readout", "main-mono"});
+  list.push_back({"gallery", "chain view playing: meters, tile glows, clip LEDs", "main-mono"});
   list.push_back({"stereo", "stereo lanes playing: both chains, correlation meter", "main-stereo"});
   list.push_back({"detail", "block detail card playing", "main-detail", true, false, scenarioDrive("main-detail")});
   list.push_back({"eq-curve", "EQ curve view playing: the live output spectrum at 30 fps", "main-detail-eq-curve",

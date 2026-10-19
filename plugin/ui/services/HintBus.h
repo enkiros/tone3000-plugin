@@ -7,8 +7,6 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-#include "UiPrefs.h"
-
 namespace t3k::ui {
 
 class HintBus {
@@ -18,8 +16,6 @@ public:
     virtual void hintChanged() = 0;
   };
 
-  explicit HintBus(UiPrefs& prefs);
-
   // Current help line ("" = nothing hovered).
   juce::String current() const { return pinned_.isNotEmpty() ? pinned_ : hover_; }
 
@@ -27,15 +23,10 @@ public:
   void pin(const juce::String& text);
   void unpin(const juce::String& text);
 
-  // Whether the hint bar shows at all (per-machine preference, on by default).
-  bool enabled() const { return prefs_.getBool(UiPrefs::kShowHints, true); }
-  void setEnabled(bool enabled);
-
   void addListener(Listener* l) { listeners.add(l); }
   void removeListener(Listener* l) { listeners.remove(l); }
 
 private:
-  UiPrefs& prefs_;
   juce::String hover_, pinned_;
   juce::ListenerList<Listener> listeners;
 };

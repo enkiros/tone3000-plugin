@@ -2,8 +2,6 @@
 
 namespace t3k::ui {
 
-HintBus::HintBus(UiPrefs& prefs) : prefs_(prefs) {}
-
 void HintBus::setHover(const juce::String& text) {
   if (hover_ == text) return;
   hover_ = text;
@@ -19,12 +17,6 @@ void HintBus::pin(const juce::String& text) {
 void HintBus::unpin(const juce::String& text) {
   if (pinned_ != text) return;
   pinned_.clear();
-  listeners.call([](Listener& l) { l.hintChanged(); });
-}
-
-void HintBus::setEnabled(bool enabled) {
-  if (this->enabled() == enabled) return;
-  prefs_.setBool(UiPrefs::kShowHints, enabled);
   listeners.call([](Listener& l) { l.hintChanged(); });
 }
 

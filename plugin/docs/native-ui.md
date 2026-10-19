@@ -101,7 +101,6 @@ TONE3000Processor ──► ProcessorBackend : ui::Backend ◄── MockBackend
                  ├─ Faceplate (knobs, SpreadControls, AlignControls)
                  │  (ToneBrowser takes over middle + Faceplate while open;
                  │   SignInScreen takes the same slot while a sign-in runs)
-                 ├─ HintBar
                  └─ OverlayLayer: Settings, ConnectionModal, UpdateNotice,
                     popovers (TileMenu, ImageDeckPanel, …), Toast
 ```
@@ -184,8 +183,9 @@ cards fill two columns, three once three fit at the default 392px card
 width. `Popover` adopts its anchor's scale relative to the overlay layer, so
 the filter menus opened from that body are 1x as well.
 
-Resize limits/aspect and the persisted `editorScale`/`editorExtraHeight`
-are kept verbatim from `Editor.cpp` (moved, not rewritten).
+Resize limits/aspect and the persisted `editorScale` are kept verbatim from
+`Editor.cpp` (moved, not rewritten). The root has no hint-bar strip or
+persistent extra height.
 
 ### 5.2 Fonts
 Roboto Mono (Regular, Bold) and Arimo (Regular, Bold, Italic, Bold Italic)
@@ -428,10 +428,10 @@ reflow with the same insertion rules as `GalleryLane.tsx` → commit through
 drops onto tiles use `FileDragAndDropTarget` (also fixes Linux drops that
 the webview could not receive).
 
-### 5.10 Hints
-Components call `setHelpText()` (JUCE built-in). `HintBus` listens to root
-mouse-move, walks from the hit component up to the first non-empty help text
-and publishes it (DOM `data-help` delegation). `pin()`/`unpin()` for drags.
+### 5.10 Control help
+Components retain `setHelpText()` (JUCE built-in) and the shared help-copy
+catalog, including touch wording. No hint bar is mounted in the root or
+reserves editor height.
 
 ### 5.11 Meters
 `MeterStore` polls `backend.getMeterLevels()` on the `UiClock` tick,
@@ -536,7 +536,6 @@ tree; the map is the key to the `port of …` notes in the C++ headers.
 | `AccountMenu.tsx` | `views/AccountMenu` | avatar image, popover |
 | `StereoModeToggle.tsx` | `views/StereoModeToggle` | |
 | `AppBanner.tsx` | `views/AppBanner` | slide-in, variants |
-| `HintBar.tsx` | `views/HintBar` | |
 | `Faceplate.tsx`, `KnobControl.tsx`, `KnobFace.tsx`, `KnobInner.tsx`, `knobScale.ts` | `views/Faceplate`, `widgets/Knob` | drag/fine/double-click type/alt reset; touch variants |
 | `SpreadControls.tsx`, `AlignControls.tsx` | `views/SpreadControls`, `views/AlignControls` | |
 | `ImageDeckPanel.tsx` | `views/ImageDeckPanel` | |
@@ -611,9 +610,9 @@ build until Phase 11 flipped the default).
 | 0 | Scaffold | `plugin/ui` tree, CMake option, `T3kConfig.h` from `.env`, `Theme`, `Fonts`, `Icons` + generator, `Design`, `Paint`, testbed app skeleton, fixture export, compare tool | testbed renders an empty 1024×578 root and compares a PNG |
 | 1 | Model + backend | `model/*` parsers with unit checks against fixture JSON, `ui::Backend`, `ProcessorBackend`, `MockBackend` | all fixtures parse; mock answers every native function |
 | 2 | Services | `ChainStore`, `MeterStore`, `PresetStore`, `AudioDeviceStore`, `MidiMapStore`, `UiPrefs`, `HintBus`, `HttpClient` | stores unit-tested against the mock |
-| 3 | Chrome | `PluginRoot`, `PluginHeader`, logo, `PresetBar` (+popover, rename), `AccountMenu`, `StereoModeToggle`, `HintBar`, `NativeEditor` scaling/resize/persistence | `header-*`, `preset-*` scenarios ≤ budget |
+| 3 | Chrome | `PluginRoot`, `PluginHeader`, logo, `PresetBar` (+popover, rename), `AccountMenu`, `StereoModeToggle`, `NativeEditor` scaling/resize/persistence | `header-*`, `preset-*` scenarios ≤ budget |
 | 4 | Faceplate | `Knob` family, `Faceplate`, `SpreadControls`, `AlignControls`, `ImageDeckPanel`, parameter attachments, touch paths | `faceplate-*` scenarios; knob interactions match `KnobControl.tsx` (drag, shift-fine, double-click entry, alt reset) |
-| 5 | Meters | `DbMeter`, `DotMeter`, `BlockLed`, `BlockMeter`, `MeterStore` wiring, CPU readout | meter fixtures render identically; CPU of idle UI ≤ webview build |
+| 5 | Meters | `DbMeter`, `DotMeter`, `BlockLed`, `BlockMeter`, `MeterStore` wiring | meter fixtures render identically |
 | 6 | Chain gallery | `ChainView`, `GalleryLane`, `GalleryTile`, `ContextMenu`, `GearGlyph`, `FormatBadge`, `RetryLoadBadge`, `LoadingDots`, drag/drop, file drop | `main-*`, `gallery-*`, loading/error tile scenarios |
 | 7 | Block detail | `ChainBlockView`, `BlockInfoPanel`, `ModelSelect`, `BlockEqView`, `EqSliders`, `SpectrumBackdrop`, EQ math | `block-*`, `eq-*` scenarios |
 | 8 | Tuner + banners + toast + modals | `TunerView`, `AppBanner` choreography (window grows, then slides), `Toast`, `ModalLayer` + blur, `UpdateNotice`, `ConnectionModal`, `OAuthOverlay`, `ConnectionGate`, `UpdateCheck` | `main-tuner-*`, `banner-*`, `chrome-toast-*`, `load-offline-*`, `load-oauth-*`, `load-update-notice` scenarios; `--selftest` green |

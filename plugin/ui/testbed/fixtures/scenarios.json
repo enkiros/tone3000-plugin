@@ -804,7 +804,7 @@
    "id": "main-mono",
    "section": "main",
    "title": "Signal chain - mono",
-   "description": "The default view. A mono chain with three tone blocks (drive pedal, amp, cab IR) and two open + slots. Input/output meters flank the gallery; the faceplate carries global gain, gate and tone stack; the hint bar sits at the bottom.",
+   "description": "The default view. A mono chain with three tone blocks (drive pedal, amp, cab IR) and two open + slots. Input/output meters flank the gallery; the faceplate carries global gain, gate and tone stack.",
    "chain": {
     "revision": 1,
     "canUndo": true,
@@ -1104,7 +1104,6 @@
      "factory": false
     }
    ],
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -1399,7 +1398,6 @@
     "cpu": 0.22,
     "correlation": 0.9
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -1444,7 +1442,6 @@
      }
     ]
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -1728,7 +1725,6 @@
    "sessionStorage": {
     "t3k.detailBlockId": "blk-2"
    },
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -2011,7 +2007,6 @@
    "sessionStorage": {
     "t3k.detailBlockId": "blk-2"
    },
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -2293,7 +2288,6 @@
    "sessionStorage": {
     "t3k.detailBlockId": "blk-2"
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -2575,7 +2569,6 @@
    "sessionStorage": {
     "t3k.detailBlockId": "blk-2"
    },
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -2856,7 +2849,6 @@
    "sessionStorage": {
     "t3k.detailBlockId": "blk-2"
    },
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -3139,7 +3131,6 @@
    "sessionStorage": {
     "t3k.detailBlockId": "blk-2"
    },
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -3499,7 +3490,6 @@
      }
     ]
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -3787,7 +3777,6 @@
      }
     ]
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -4074,7 +4063,6 @@
     "confidence": 0,
     "level": -60
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -4361,7 +4349,6 @@
     "confidence": 0.95,
     "level": -18
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -4648,7 +4635,6 @@
     "confidence": 0.95,
     "level": -18
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -4935,7 +4921,6 @@
     "confidence": 0.95,
     "level": -18
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -5222,7 +5207,6 @@
     "confidence": 0.95,
     "level": -18
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -5501,7 +5485,6 @@
      }
     ]
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -5782,7 +5765,6 @@
    "sessionStorage": {
     "t3k.detailBlockId": "blk-2"
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -6063,7 +6045,6 @@
    "sessionStorage": {
     "t3k.detailBlockId": "blk-2"
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -6346,7 +6327,6 @@
     }
    },
    "offlineAfterLoad": true,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -6629,7 +6609,6 @@
     }
    },
    "imagesOffline": true,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -6914,7 +6893,6 @@
    "api": {
     "authorize": "stall"
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -7199,7 +7177,6 @@
    "api": {
     "authorize": "browser-failed"
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -7484,7 +7461,6 @@
    "api": {
     "authorize": "browser-failed"
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -7770,7 +7746,6 @@
     "authorize": "browser-failed",
     "device": "stall"
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -8055,7 +8030,6 @@
    "api": {
     "authorize": "browser-failed"
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -8341,7 +8315,6 @@
     "authorize": "browser-failed",
     "device": "expired"
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -8632,7 +8605,6 @@
     "token": "stall"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -8916,7 +8888,6 @@
    },
    "query": "?t3k-nav-error=1",
    "settle": 600,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -9205,7 +9176,6 @@
      "url": "https://www.tone3000.com/plugin"
     }
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -9555,7 +9525,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": false
   },
@@ -9893,7 +9862,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": false
   },
@@ -10242,7 +10210,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": false
   },
@@ -10591,7 +10558,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": false
   },
@@ -10940,7 +10906,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": false
   },
@@ -11289,7 +11254,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": false
   },
@@ -11638,7 +11602,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": false
   },
@@ -11987,7 +11950,6 @@
     "btMidiAvailable": false
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": false
   },
@@ -12336,7 +12298,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": false
   },
@@ -12685,7 +12646,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": false
   },
@@ -12973,7 +12933,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 900,
-   "hints": true,
    "banner": false,
    "hasDrive": false
   },
@@ -13261,7 +13220,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -13550,7 +13508,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 900,
-   "hints": true,
    "banner": false,
    "hasDrive": false
   },
@@ -13839,7 +13796,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 900,
-   "hints": true,
    "banner": false,
    "hasDrive": false
   },
@@ -14128,7 +14084,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -14415,7 +14370,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -14703,7 +14657,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -14991,7 +14944,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -15279,7 +15231,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -15567,7 +15518,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -15855,7 +15805,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true,
@@ -16146,7 +16095,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -16434,7 +16382,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false,
@@ -16725,7 +16672,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false,
@@ -17020,7 +16966,6 @@
     "search": "stall"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "hasDrive": false
   },
@@ -17317,7 +17262,6 @@
     }
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "hasDrive": false
   },
@@ -17608,7 +17552,6 @@
     "search": "error"
    },
    "settle": 800,
-   "hints": true,
    "banner": false,
    "hasDrive": false
   },
@@ -17899,7 +17842,6 @@
     "tone": "stall"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -18187,7 +18129,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -18475,7 +18416,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -18763,7 +18703,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -19051,7 +18990,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -19339,7 +19277,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -19627,7 +19564,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -19915,7 +19851,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -20212,7 +20147,6 @@
     }
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -20500,7 +20434,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -20788,7 +20721,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -21076,7 +21008,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -21364,7 +21295,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -21652,7 +21582,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -21940,7 +21869,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -22228,7 +22156,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -22516,7 +22443,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -22804,7 +22730,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -23092,7 +23017,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -23380,7 +23304,6 @@
     "t3k.loginIntent": "browse"
    },
    "settle": 400,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -23388,7 +23311,7 @@
    "id": "settings-plugin",
    "section": "settings",
    "title": "Plugin Settings (in a DAW)",
-   "description": "Hosted builds get a single page: Show Info Bar, Show Gate and Show Pitch Shift view toggles (gate on, pitch off by default; a powered effect shows regardless), MIDI Mapping and Advanced entry points, the update row when a newer version exists, and the running version in the footer.",
+   "description": "Hosted builds get a single page: Show Gate and Show Pitch Shift view toggles (gate on, pitch off by default; a powered effect shows regardless), MIDI Mapping and Advanced entry points, the update row when a newer version exists, and the running version in the footer.",
    "chain": {
     "revision": 1,
     "canUndo": true,
@@ -23671,7 +23594,6 @@
    "localStorage": {
     "t3k.updateNotice": "{\"snoozeUntil\":1790193130724}"
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -23957,7 +23879,6 @@
     "calibrateInput": true,
     "osEnabled": true
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -24244,7 +24165,6 @@
     "learnTargetId": "",
     "mappings": []
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -24547,7 +24467,6 @@
      }
     ]
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -24834,7 +24753,6 @@
     "learnTargetId": "",
     "mappings": []
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -25121,7 +25039,6 @@
     "learnTargetId": "",
     "mappings": []
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -25470,7 +25387,6 @@
     ],
     "btMidiAvailable": true
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -25820,7 +25736,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": true
   },
@@ -26169,7 +26084,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": true
   },
@@ -26518,7 +26432,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": true
   },
@@ -26867,7 +26780,6 @@
     "btMidiAvailable": true
    },
    "banner": true,
-   "hints": true,
    "auth": false,
    "hasDrive": true
   },
@@ -27148,7 +27060,6 @@
      "name": "Crunch Rhythm"
     }
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -27431,7 +27342,6 @@
     }
    },
    "auth": true,
-   "hints": true,
    "banner": false,
    "hasDrive": true
   },
@@ -27739,7 +27649,6 @@
      "factory": false
     }
    ],
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -28048,7 +27957,6 @@
      "factory": false
     }
    ],
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -28358,7 +28266,6 @@
     }
    ],
    "settle": 100,
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -28669,7 +28576,6 @@
     "cpu": 0.14,
     "correlation": 0.35
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -28965,7 +28871,6 @@
     "cpu": 0.14,
     "correlation": 1
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -29261,7 +29166,6 @@
     "cpu": 0.14,
     "correlation": 1
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -29559,7 +29463,6 @@
     "cpu": 0.14,
     "correlation": 0.35
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -29920,7 +29823,6 @@
      }
     ]
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -30281,7 +30183,6 @@
      }
     ]
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -30559,7 +30460,6 @@
      }
     ]
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -30839,7 +30739,6 @@
      }
     ]
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": false
@@ -31121,7 +31020,6 @@
      "name": "Crunch Rhythm"
     }
    },
-   "hints": true,
    "banner": false,
    "auth": false,
    "hasDrive": true
@@ -31403,7 +31301,6 @@
      "name": "Crunch Rhythm"
     }
    },
-   "hints": false,
    "banner": false,
    "auth": false,
    "hasDrive": false

@@ -111,7 +111,7 @@ plugin/ui/
                       (BrowserState: what the tone browser keeps between visits):
                       UiClock (the one 30 Hz tick every poller shares),
                       ChainStore, MeterStore, PresetStore, AudioDeviceStore,
-                      MidiMapStore, UiPrefs, HintBus, Toast, Banners,
+                      MidiMapStore, UiPrefs, Toast, Banners,
                       ParamBinding, AutoMeasure, SpectrumFeed, TunerFeed,
                       ModelLoads, LocalFiles, ImageLoader, ConnectionGate,
                       UpdateCheck, ToneLoadFlow, Zoom, Pointer (touch or

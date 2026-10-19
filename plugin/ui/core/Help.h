@@ -1,7 +1,6 @@
-// Hint-bar copy (port of helpText.ts). Every control
-// publishes a one-line hint while hovered; all wording lives here so it stays
-// consistent. Desktop copy is authored once and re-worded for touch devices
-// in a single pass (`Right-click` -> `Touch and hold`, `click` -> `tap`).
+// Control help copy (port of helpText.ts). Desktop copy is authored once and
+// re-worded for touch devices in a single pass (`Right-click` -> `Touch and
+// hold`, `click` -> `tap`).
 #pragma once
 
 #include <juce_core/juce_core.h>
@@ -44,8 +43,6 @@ enum class Key {
   eqFader, eqFaderPass, eqDot, eqFreqChip, eqGainChip, eqQChip,
   // Meters
   clipDot,
-  // The hint bar itself
-  cpuLoad, hideHints,
 };
 
 // The (touch-reworded when applicable) copy for a key.

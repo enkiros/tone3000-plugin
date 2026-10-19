@@ -252,10 +252,6 @@ std::map<Key, String> buildTable() {
   // Meters
   t[Key::clipDot] = U("Clip: latches on clipping. Click: clear.");
 
-  // The hint bar itself
-  t[Key::cpuLoad] = U("CPU: audio engine load.");
-  t[Key::hideHints] = U("Hide Info Bar: hide this bar. Re-enable in Settings.");
-
   for (auto& [key, value] : t) value = touchify(value);
   return t;
 }

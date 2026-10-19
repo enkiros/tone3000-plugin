@@ -35,9 +35,8 @@ namespace t3k::ui {
 class Shell {
 public:
   virtual ~Shell() = default;
-  // Chrome strips (banner, hint bar) grow the window instead of squishing the
-  // core UI; `persistent` is the part remembered for the next session.
-  virtual void setExtraContentHeight(int total, int persistent) = 0;
+  // The banner grows the window instead of squishing the core UI.
+  virtual void setExtraContentHeight(int total) = 0;
 };
 
 class Services {
@@ -50,7 +49,6 @@ public:
         session(t),
         shell(s),
         prefs(p),
-        hints(prefs),
         chain(b, clock),
         meters(b, clock),
         presets(b, chain),

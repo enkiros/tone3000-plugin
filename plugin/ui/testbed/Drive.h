@@ -1,5 +1,5 @@
 // Interaction helpers for scenario drives. Controls are located by their
-// help text (the hint-bar copy every control carries), so a drive reads as
+// help text, so a drive reads as
 // what the user sees: click("Undo"), hover("Input level").
 #pragma once
 
@@ -20,8 +20,8 @@ juce::Button* buttonNamed(juce::Component& root, const juce::String& name);
 // `input[placeholder="…"]`
 juce::TextEditor* inputWithPlaceholder(juce::Component& root, const juce::String& placeholder);
 
-// A real click moves the pointer onto the target first, so the hint bar
-// shows the control's help in the shot; hover() reproduces that half.
+// A real click moves the pointer onto the target first; hover() reproduces
+// that pointer movement.
 void hover(PluginRoot& root, juce::Component& target);
 // Move the pointer to a point inside the component first, for controls whose
 // hint depends on where the pointer is (a meter's clip LED).

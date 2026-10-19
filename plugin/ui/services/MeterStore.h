@@ -1,6 +1,6 @@
 // Meter transport (port of useMeters.tsx): ONE `getMeterLevels` pull per
 // UiClock tick feeds every meter in the plugin (global input/output +
-// per-block in/out), plus the CPU readout and the spread correlation that
+// per-block in/out), plus the CPU utilization estimate and spread correlation that
 // ride the same payload. Values are quantized so steady signals cause no
 // repaints, and the poll runs only while something listens.
 #pragma once

@@ -127,7 +127,7 @@ the touch-ups a finger needs. Three gates, from narrowest reach to widest:
   through `T3K_UI_COARSE_POINTER` so touch layouts can be captured on a
   desktop): static ergonomics for a touch-first device. Tile chrome that is
   always visible instead of hover-revealed (`ToneTile`, `GalleryLane`), and
-  the touch wording of the hint-bar copy (`Help.cpp`).
+  touch wording for the shared control-help copy (`Help.cpp`).
 - `MouseInputSource::isTouch()` per event: behaviours (a tile's long-press
   menu, the knob's double tap and touch-and-hold). A hybrid device gets touch
   behaviour from its touchscreen and desktop behaviour from its mouse.
@@ -138,7 +138,6 @@ the touch-ups a finger needs. Three gates, from narrowest reach to widest:
 | drag a tile | reorder (the same distance rule as desktop) |
 | hold a tile 500 ms | tile menu, while the finger is still down (`GalleryTile::kLongPressMs`) |
 | hold the Spread / Align Offset knob | the advanced deck (desktop: right-click the group; `Knob::onLongPress`) |
-| press a control | its help in the hint bar; release clears it |
 | drag a knob up or down | adjust |
 | double tap a knob, EQ fader or EQ dot | reset to default |
 | tap a knob's label | type the value |

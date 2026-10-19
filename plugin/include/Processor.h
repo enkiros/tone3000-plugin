@@ -416,16 +416,6 @@ public:
   // the message thread.
   std::atomic<double> editorScale{1.0};
 
-  // Extra window height (design px) for persistent chrome strips, currently
-  // just the hint bar. Persisted like editorScale so the next editor opens at
-  // the height the UI's first paint will actually need, instead of growing a
-  // beat after launch. Dynamic strips (the standalone banner) are excluded.
-  // Default 36 = the hint bar, which the UI shows by default: a fresh insert
-  // then opens at its final height and never asks the host to resize. Some
-  // hosts (LUNA) grant a post-open grow without re-laying-out their own
-  // plugin-window chrome, which visibly misplaces it.
-  std::atomic<int> editorExtraHeight{36};
-
   // Which lane loadTone falls back to ("left"/"right") when no valid target
   // insert id is supplied. The UI sets it when an Add starts, so a tone
   // picked later lands in the lane the user was working in. Not a view mode
@@ -517,7 +507,7 @@ public:
   static juce::File getSettingsFile();
 
   // PropertiesFile options for the native UI's per-machine preferences
-  // (hint bar, PC numbers, cached session…); see plugin/ui/services/UiPrefs.h.
+  // (PC numbers, cached session…); see plugin/ui/services/UiPrefs.h.
   static juce::PropertiesFile::Options uiPreferencesOptions();
 
 private:
@@ -1246,8 +1236,8 @@ private:
   // unless disabled for tests (see disableMachineDefaultParametersForTesting).
   void seedMachineDefaultParameters();
 
-  // Audio-callback load (timed around processBlock); ships to the UI as the
-  // `cpu` field of getMeterLevels for the hint-bar readout.
+  // Audio-callback load, timed around processBlock and exposed as `cpu` by
+  // getMeterLevels.
   juce::AudioProcessLoadMeasurer loadMeasurer;
 
   // Meter level tracking, per channel (mono sources report L == R).

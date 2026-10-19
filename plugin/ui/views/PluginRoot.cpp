@@ -182,7 +182,7 @@ void PluginRoot::updateNoticeChanged() {
 void PluginRoot::updateChromeHeight() {
   const int bannerExtra = 0;
   setSize(design::kWidth, design::kHeight + bannerExtra);
-  services_.shell.setExtraContentHeight(bannerExtra, 0);
+  services_.shell.setExtraContentHeight(bannerExtra);
 }
 
 // Banner choreography

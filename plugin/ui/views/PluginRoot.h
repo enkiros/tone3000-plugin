@@ -1,6 +1,6 @@
 // Top-level native UI (port of Plugin.tsx): header, meters + chain (or the
 // tuner takeover), faceplate (the tone browser and the sign-in screen take
-// over both), hint bar, and the overlay layer for popovers, the toast,
+// over both), and the overlay layer for popovers, the toast,
 // banners and modals. Laid out in design space
 // (1024 x 578 + chrome strips); the shell scales the whole thing.
 //

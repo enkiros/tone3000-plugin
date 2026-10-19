@@ -425,25 +425,26 @@ struct UiPrefsTests : juce::UnitTest {
 
     beginTest("a write merges in the other host's writes instead of overwriting them");
     a.prefs.set(UiPrefs::kTokens, "A");
-    b.prefs.setBool(UiPrefs::kShowHints, false);  // b's copy never saw kTokens
+    b.prefs.setBool(UiPrefs::kShowGateControl, false);  // b's copy never saw kTokens
     expectEquals(b.prefs.get(UiPrefs::kTokens), juce::String("A"));
-    expect(b.heard.contains(UiPrefs::kTokens) && b.heard.contains(UiPrefs::kShowHints));
+    expect(b.heard.contains(UiPrefs::kTokens) && b.heard.contains(UiPrefs::kShowGateControl));
     Host c(file, lock);  // what is on disk
     expectEquals(c.prefs.get(UiPrefs::kTokens), juce::String("A"));
-    expect(!c.prefs.getBool(UiPrefs::kShowHints, true));
+    expect(!c.prefs.getBool(UiPrefs::kShowGateControl, true));
 
     beginTest("sync pulls in changes and removals, telling listeners of each");
     a.heard.clear();
     a.prefs.sync();  // b's hints toggle
-    expect(!a.prefs.getBool(UiPrefs::kShowHints, true) && a.heard.contains(UiPrefs::kShowHints));
+    expect(!a.prefs.getBool(UiPrefs::kShowGateControl, true) &&
+           a.heard.contains(UiPrefs::kShowGateControl));
     a.heard.clear();
     b.prefs.set(UiPrefs::kTokens, "B");
-    b.prefs.remove(UiPrefs::kShowHints);
+    b.prefs.remove(UiPrefs::kShowGateControl);
     expectEquals(a.prefs.get(UiPrefs::kTokens), juce::String("A"));
     a.prefs.sync();
     expectEquals(a.prefs.get(UiPrefs::kTokens), juce::String("B"));
-    expect(a.prefs.getBool(UiPrefs::kShowHints, true));
-    expect(a.heard.contains(UiPrefs::kTokens) && a.heard.contains(UiPrefs::kShowHints));
+    expect(a.prefs.getBool(UiPrefs::kShowGateControl, true));
+    expect(a.heard.contains(UiPrefs::kTokens) && a.heard.contains(UiPrefs::kShowGateControl));
     a.heard.clear();
     a.prefs.sync();
     expect(a.heard.isEmpty());

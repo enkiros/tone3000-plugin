@@ -144,12 +144,8 @@ void NativeEditor::updateResizeConstraints() {
   getConstrainer()->setFixedAspectRatio(static_cast<double>(design::kWidth) / designHeight());
 }
 
-void NativeEditor::setExtraContentHeight(int total, int persistent) {
+void NativeEditor::setExtraContentHeight(int total) {
   const int clamped = juce::jlimit(0, kMaxExtraHeight, total);
-  // Remember the session-persistent portion (the hint bar; the banner is
-  // dynamic) even when the window size itself doesn't change, so the next
-  // editor opens pre-sized for the chrome the UI will render on first paint.
-  processor_.editorExtraHeight.store(juce::jlimit(0, kMaxExtraHeight, persistent));
   if (clamped == extraContentHeight_) return;
   const bool grew = clamped > extraContentHeight_;
   extraContentHeight_ = clamped;

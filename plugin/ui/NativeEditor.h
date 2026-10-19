@@ -28,7 +28,7 @@ public:
   explicit NativeEditor(TONE3000Processor& owner);
   ~NativeEditor() override;
 
-  void setExtraContentHeight(int total, int persistent) override;
+  void setExtraContentHeight(int total) override;
 
   void paint(juce::Graphics& g) override;
   void paintOverChildren(juce::Graphics& g) override;
@@ -47,7 +47,7 @@ public:
   bool usesWindowsMultiTouch() const override { return true; }
 
 private:
-  static constexpr int kMaxExtraHeight = 160;  // banner (~44) + hint bar (36) + headroom
+  static constexpr int kMaxExtraHeight = 160;  // banner + headroom
   // How long a taller design box keeps the current scale while the host
   // resize is pending, before shrinking to fit.
   static constexpr int kShrinkGraceMs = 450;

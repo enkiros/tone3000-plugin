@@ -7,8 +7,7 @@ namespace t3k::ui::testbed {
 namespace {
 
 // Seed UiPrefs the way a real install would already hold them: the
-// scenario's own entries, the auth tokens + cached user when `auth`, and the
-// hints toggle.
+// scenario's own entries and the auth tokens + cached user when `auth`.
 void seedPrefs(UiPrefs& prefs, const Scenario& scenario, const juce::var& fixtures) {
   auto seed = [](const juce::var& obj, auto&& put) {
     if (auto* props = obj.getDynamicObject())
@@ -24,7 +23,6 @@ void seedPrefs(UiPrefs& prefs, const Scenario& scenario, const juce::var& fixtur
     prefs.setJson(UiPrefs::kTokens, juce::var(tokens));
     prefs.setJson(UiPrefs::kCachedUser, fixtures["user"]);
   }
-  if (!scenario.hints()) prefs.setBool(UiPrefs::kShowHints, false);
 }
 
 // The suite's fixtureSvg for keys without a real photo: a deterministic
@@ -84,7 +82,7 @@ ScaledHost::ScaledHost(Backend& backend, const Scenario& scenario, const juce::v
   resized();  // the root's chrome report already sized us; fit it now that it exists
 }
 
-void ScaledHost::setExtraContentHeight(int total, int) {
+void ScaledHost::setExtraContentHeight(int total) {
   if (auto* window = findParentComponentOfClass<juce::DocumentWindow>()) {
     const double scale = getWidth() / static_cast<double>(design::kWidth);
     window->setContentComponentSize(juce::roundToInt(design::kWidth * scale),

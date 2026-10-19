@@ -1,6 +1,6 @@
 // Whether the pointer driving the UI can hover. What a mouse reveals on
 // hover (the tile chrome, the branch dots) stays up for a finger, and the
-// hint bar says "tap" where its copy says "click". iOS and Android are touch
+// shared help copy says "tap" where desktop copy says "click". iOS and Android are touch
 // from the start and stay so; a desktop build decides at run time, since a
 // Windows or Linux tablet is a desktop build with a finger on it and a
 // convertible swaps between the two: it seeds from the hardware where the
@@ -36,7 +36,7 @@ private:
   juce::ListenerList<Listener> listeners_;
 };
 
-// Installed on the root as a recursive mouse listener (beside HintTracker):
+// Installed on the root as a recursive mouse listener:
 // feeds the source of every press and wheel turn to the Pointer. Moves are
 // not consulted: JUCE synthesises mouse-source moves of its own (a fake move
 // on the main mouse source whenever a component under it is moved, shown or

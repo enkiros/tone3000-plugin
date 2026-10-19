@@ -85,8 +85,6 @@ private:
 PluginSettingsPage::PluginSettingsPage(Services& services)
     : FormStack(form::kSectionGap),
       services_(services),
-      infoBar_("Show Info Bar",
-               "Shows help text on hover explaining what elements do, plus keyboard shortcuts and a CPU meter."),
       showGate_("Show Gate", "Reduces unwanted noise like hum and hiss while you're playing."),
       showPitch_("Show Pitch Shift",
                  "Transpose your instrument up or down without retuning or use a MIDI expression pedal for "
@@ -144,10 +142,6 @@ PluginSettingsPage::PluginSettingsPage(Services& services)
       update_({}, FormButton::cta()),
       updateBox_(update_, static_cast<float>(update_.preferredHeight())),
       version_(juce::String(), form::kSmallPx, theme::kSubtle) {
-  // Info Bar.
-  infoBar_.onChange = [this](bool on) { services_.hints.setEnabled(on); };
-  add(infoBar_);
-
   // Gate / pitch: view settings the faceplate reads from the same keys.
   showGate_.onChange = [this](bool on) { services_.prefs.setBool(UiPrefs::kShowGateControl, on); };
   showPitch_.onChange = [this](bool on) { services_.prefs.setBool(UiPrefs::kShowPitchControl, on); };
@@ -251,13 +245,12 @@ PluginSettingsPage::~PluginSettingsPage() {
 }
 
 void PluginSettingsPage::prefChanged(const juce::String& key) {
-  if (key == UiPrefs::kShowHints || key == UiPrefs::kShowGateControl || key == UiPrefs::kShowPitchControl ||
+  if (key == UiPrefs::kShowGateControl || key == UiPrefs::kShowPitchControl ||
       key == UiPrefs::kShowBlockSizeControl || key == UiPrefs::kShowBlockNormalizeControl)
     syncPrefs();
 }
 
 void PluginSettingsPage::syncPrefs() {
-  infoBar_.setValue(services_.hints.enabled());
   showGate_.setValue(services_.prefs.getBool(UiPrefs::kShowGateControl, true));
   showPitch_.setValue(services_.prefs.getBool(UiPrefs::kShowPitchControl, false));
   const bool size = services_.prefs.getBool(UiPrefs::kShowBlockSizeControl, false);

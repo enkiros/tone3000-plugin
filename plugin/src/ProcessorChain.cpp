@@ -1210,7 +1210,7 @@ juce::var TONE3000Processor::getMeterLevels() const {
   };
   root->setProperty("input", channelPair(inputMeterLevelL.load(), inputMeterLevelR.load()));
   root->setProperty("output", channelPair(outputMeterLevelL.load(), outputMeterLevelR.load()));
-  // Audio-callback load as a 0..1 proportion (the hint bar shows it as a %).
+  // Audio-callback load as a 0..1 proportion.
   root->setProperty("cpu", loadMeasurer.getLoadAsProportion());
   // Stereo-image output correlation (-1..1, 1 when the engine is idle) for
   // the mono-compatibility meter: whichever image engine the mode runs
