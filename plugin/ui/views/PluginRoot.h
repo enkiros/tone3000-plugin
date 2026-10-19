@@ -37,7 +37,6 @@
 
 #include "AppBanner.h"
 #include "Faceplate.h"
-#include "HintBar.h"
 #include "MainScreen.h"
 #include "PluginHeader.h"
 #include "SignInScreen.h"
@@ -55,7 +54,6 @@ namespace t3k::ui {
 
 class PluginRoot : public juce::Component,
                    public OverlayHost,
-                   private HintBus::Listener,
                    private BannerStore::Listener,
                    private ConnectionGate::Listener,
                    private UpdateCheck::Listener,
@@ -107,7 +105,6 @@ public:
 private:
   enum class BannerPhase { hidden, waiting, shown };
 
-  void hintChanged() override;
   void bannerChanged() override;
   void connectionProblemChanged() override;
   void updateNoticeChanged() override;
@@ -144,7 +141,6 @@ private:
 
   Services& services_;
   PluginHeader header_;
-  HintBar hintBar_;
   MainScreen main_;  // meters + chain gallery
   std::unique_ptr<ToneBrowser> browser_;
   std::unique_ptr<SignInScreen> signIn_;
@@ -156,9 +152,7 @@ private:
   ToastView toast_;
   std::unique_ptr<UpdateNotice> updateNotice_;
   std::unique_ptr<ConnectionModal> connectionModal_;
-  HintTracker hintTracker_;
   PointerTracker pointerTracker_;
-  bool hintsVisible_ = true;
 
   BannerPhase bannerPhase_ = BannerPhase::hidden;
   DelayedCall bannerWait_;

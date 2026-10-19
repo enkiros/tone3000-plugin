@@ -1,7 +1,6 @@
 #include "PluginRoot.h"
 
 #include "core/Design.h"
-#include "core/Help.h"
 #include "core/NoDefaultFocus.h"
 #include "core/Theme.h"
 
@@ -15,11 +14,9 @@ constexpr int kToastGap = 24;
 PluginRoot::PluginRoot(Services& services)
     : services_(services),
       header_(services),
-      hintBar_(services),
       main_(services),
       faceplate_(services),
       toast_(services.toast),
-      hintTracker_(services.hints, *this),
       pointerTracker_(services.pointer, *this) {
   setOpaque(true);
   setFocusContainerType(FocusContainerType::keyboardFocusContainer);
@@ -62,7 +59,6 @@ PluginRoot::PluginRoot(Services& services)
   addAndMakeVisible(header_);
   addAndMakeVisible(main_);
   addAndMakeVisible(faceplate_);
-  addChildComponent(hintBar_);
   addChildComponent(banner_);
 
   // Popovers, toast and modals sit above everything; the layer itself is
@@ -72,12 +68,10 @@ PluginRoot::PluginRoot(Services& services)
   overlay_.addChildComponent(toast_);
 
   addMouseListener(&focusPolicy_, true);
-  services_.hints.addListener(this);
   services_.banners.addListener(this);
   services_.connection.addListener(this);
   services_.updates.addListener(this);
   services_.session.addListener(this);
-  hintsVisible_ = false;
   updateChromeHeight();
   bannerChanged();
   connectionProblemChanged();
@@ -95,7 +89,6 @@ PluginRoot::~PluginRoot() {
   services_.updates.removeListener(this);
   services_.connection.removeListener(this);
   services_.banners.removeListener(this);
-  services_.hints.removeListener(this);
 }
 
 // Modals
@@ -145,7 +138,6 @@ void PluginRoot::authFlowChanged() {
       juce::Component* below = self->browser_ ? static_cast<juce::Component*>(self->browser_.get())
                                               : static_cast<juce::Component*>(&self->faceplate_);
       self->addChildComponent(*self->signIn_, self->getIndexOfChildComponent(below) + 1);
-      self->services_.hints.setHover({});
     } else {
       self->signIn_.reset();
     }
@@ -188,11 +180,9 @@ void PluginRoot::updateNoticeChanged() {
 
 
 void PluginRoot::updateChromeHeight() {
-  const int hintExtra = 0;
   const int bannerExtra = 0;
-  hintBar_.setVisible(hintsVisible_);
-  setSize(design::kWidth, design::kHeight + bannerExtra + hintExtra);
-  services_.shell.setExtraContentHeight(bannerExtra + hintExtra, hintExtra);
+  setSize(design::kWidth, design::kHeight + bannerExtra);
+  services_.shell.setExtraContentHeight(bannerExtra, 0);
 }
 
 // Banner choreography
@@ -430,7 +420,6 @@ void PluginRoot::openSettings(SettingsScreen::Tab tab) {
   addChildComponent(*settings_);
   settings_->toBehind(&overlay_);
   settings_->setVisible(true);
-  services_.hints.setHover({});
 }
 
 void PluginRoot::closeSettings() {
@@ -452,9 +441,7 @@ void PluginRoot::resized() {
   // gap at the bottom is black on black.
   const int slotH = bannerPhase_ == BannerPhase::shown ? AppBanner::kHeight : 0;
   banner_.setBounds(0, 0, design::kWidth, AppBanner::kHeight);
-  const int hintH = hintsVisible_ ? design::kHintHeight : 0;
-  auto column = juce::Rectangle<int>(0, slotH, design::kWidth, design::kHeight + hintH);
-  if (hintsVisible_) hintBar_.setBounds(column.removeFromBottom(hintH));
+  auto column = juce::Rectangle<int>(0, slotH, design::kWidth, design::kHeight);
   header_.setBounds(column.removeFromTop(PluginHeader::kHeight));
   if (browser_) browser_->setBounds(column);  // the rest, faceplate included
   if (signIn_) signIn_->setBounds(column);
@@ -463,8 +450,8 @@ void PluginRoot::resized() {
   if (tuner_) tuner_->setBounds(column);
 
   // The toast floats above the faceplate, measured from the overlay's bottom.
-  const int belowColumn = getHeight() - (slotH + design::kHeight + hintH);
-  toast_.setBottomOffset(belowColumn + design::kPlateHeight + hintH + kToastGap);
+  const int belowColumn = getHeight() - (slotH + design::kHeight);
+  toast_.setBottomOffset(belowColumn + design::kPlateHeight + kToastGap);
 }
 
 }  // namespace t3k::ui
