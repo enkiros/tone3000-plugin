@@ -1,6 +1,7 @@
 # Native UI testbed (see plugin/docs/native-ui.md §7). Standalone project so a
 # UI iteration never rebuilds the DSP:
 #
+#   cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug  # fetch JUCE into libs/juce
 #   cmake -S plugin/ui/testbed -B build-ui -DCMAKE_BUILD_TYPE=Debug
 #   cmake --build build-ui -j
 #   build-ui/UiTestbed_artefacts/Debug/UiTestbed.app/Contents/MacOS/UiTestbed --capture out

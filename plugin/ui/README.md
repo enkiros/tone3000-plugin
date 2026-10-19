@@ -18,9 +18,11 @@ into the generated `T3kConfig.h` (`NativeUi.cmake`). See
 
 `testbed/` is a standalone JUCE app that renders `PluginRoot` over a
 fixture-driven mock backend and mock TONE3000 session. Its own project keeps
-UI iteration from rebuilding the DSP:
+UI iteration from rebuilding the DSP. Before its first configure, configure
+the repository root once to fetch JUCE into `libs/juce`:
 
 ```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake -S plugin/ui/testbed -B build-ui -DCMAKE_BUILD_TYPE=Debug
 cmake --build build-ui -j
 UI=build-ui/UiTestbed_artefacts/Debug/UiTestbed.app/Contents/MacOS/UiTestbed   # macOS path
@@ -30,6 +32,13 @@ $UI --capture out [--ref beforeDir] [filter…] # 2x PNG per scenario (+ diff ta
 $UI --compare before.png after.png [diff.png] # one pair
 $UI --selftest                               # unit tests: pure logic + the focus policy in a real window
 $UI --bench [--seconds 10] [--json out.json] [phase…]   # CPU / memory under load (--list for the phases)
+```
+
+On Linux, pass the project's toolchain file to the root configure:
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_TOOLCHAIN_FILE=cmake/linux-toolchain.cmake
 ```
 
 ### Measuring load
