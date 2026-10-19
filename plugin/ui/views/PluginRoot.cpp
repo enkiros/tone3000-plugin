@@ -77,7 +77,7 @@ PluginRoot::PluginRoot(Services& services)
   services_.connection.addListener(this);
   services_.updates.addListener(this);
   services_.session.addListener(this);
-  hintsVisible_ = services_.hints.enabled();
+  hintsVisible_ = false;
   updateChromeHeight();
   bannerChanged();
   connectionProblemChanged();
@@ -186,15 +186,10 @@ void PluginRoot::updateNoticeChanged() {
   });
 }
 
-void PluginRoot::hintChanged() {
-  if (hintsVisible_ == services_.hints.enabled()) return;
-  hintsVisible_ = services_.hints.enabled();
-  updateChromeHeight();
-}
 
 void PluginRoot::updateChromeHeight() {
-  const int hintExtra = hintsVisible_ ? design::kHintHeight : 0;
-  const int bannerExtra = bannerPhase_ != BannerPhase::hidden ? AppBanner::kHeight : 0;
+  const int hintExtra = 0;
+  const int bannerExtra = 0;
   hintBar_.setVisible(hintsVisible_);
   setSize(design::kWidth, design::kHeight + bannerExtra + hintExtra);
   services_.shell.setExtraContentHeight(bannerExtra + hintExtra, hintExtra);

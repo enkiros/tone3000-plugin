@@ -20,10 +20,10 @@ inline constexpr int kWidth = 1024;
 inline constexpr int kHeight = 578;
 
 // Chrome strips that grow the window instead of squishing the core.
-inline constexpr int kBannerHeight = 44;   // AppBanner.tsx
+inline constexpr int kBannerHeight = 36;   // AppBanner.tsx
 inline constexpr int kHintHeight = 36;     // HintBar.tsx
 inline constexpr int kHeaderHeight = 45;   // chainLayout.tsx
-inline constexpr int kPlateHeight = 108;   // Faceplate.tsx
+inline constexpr int kPlateHeight = 72;   // Faceplate.tsx
 
 // Editor window scale range (aspect-locked corner drags).
 inline constexpr double kMaxScale = 2.0;
