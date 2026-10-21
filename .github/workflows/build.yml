@@ -43,6 +43,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # macOS universal: build arm64 + x86_64 separately (sccache-friendly),
+          # then lipo into one artefact tree before packaging.
+          - name: macOS Universal
+            runs-on: macos-14
+            os: macos
+            arch: universal
           - name: Linux aarch64
             runs-on: ubuntu-24.04-arm
             os: linux
@@ -106,6 +112,34 @@ jobs:
             libxrender-dev \
             xvfb
 
+      # Single-arch macOS builds (not "arm64;x86_64") so sccache can hash each
+      # compile; see the lipo step below. -DT3K_BUILD_UI_TESTBED builds the UI
+      # testbed alongside and registers its self-tests with ctest.
+      - name: Configure CMake (macOS arm64)
+        if: matrix.os == 'macos'
+        run: |
+          cmake -B build-arm64 -S . \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DBUILD_AAX=ON \
+            -DT3K_BUILD_UI_TESTBED=ON \
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_OBJC_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_OBJCXX_COMPILER_LAUNCHER=sccache
+
+      - name: Configure CMake (macOS x86_64)
+        if: matrix.os == 'macos'
+        run: |
+          cmake -B build-x86_64 -S . \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+            -DBUILD_AAX=ON \
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_OBJC_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_OBJCXX_COMPILER_LAUNCHER=sccache
+
       - name: Configure CMake (Linux)
         if: matrix.os == 'linux'
         run: |
@@ -121,11 +155,25 @@ jobs:
         if: matrix.os == 'linux'
         run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 2
 
+      # Sequential per-arch builds (shared runner RAM). Each arch is a distinct
+      # sccache key; cold cache pays ~2× compile once, warm cache hits both.
+      - name: Build plugin (macOS arm64)
+        if: matrix.os == 'macos'
+        run: cmake --build build-arm64 --config ${{ env.BUILD_TYPE }} --parallel
+
+      - name: Build plugin (macOS x86_64)
+        if: matrix.os == 'macos'
+        run: cmake --build build-x86_64 --config ${{ env.BUILD_TYPE }} --parallel
+
       # The default build already compiles DspTests (registered with ctest),
       # so running the suite costs seconds. macOS runs the native arm64 build.
       - name: Run DSP tests (Linux / Windows)
         if: matrix.os != 'macos'
         run: ctest --test-dir build/test --output-on-failure
+
+      - name: Run DSP tests (macOS)
+        if: matrix.os == 'macos'
+        run: ctest --test-dir build-arm64/test --output-on-failure
 
       # The native UI's pure-logic unit tests (plugin/ui/testbed/SelfTests.cpp:
       # parsers, wrapping, OAuth/PKCE, token refresh, the connection gate).
@@ -133,6 +181,141 @@ jobs:
       - name: Run UI self-tests (Linux)
         if: matrix.os == 'linux'
         run: xvfb-run -a ctest --test-dir build/plugin/ui/testbed --output-on-failure
+
+      - name: Run UI self-tests (macOS)
+        if: matrix.os == 'macos'
+        run: ctest --test-dir build-arm64/plugin/ui/testbed --output-on-failure
+
+      # Merge single-arch artefact trees into the path create-pkg.sh expects.
+      - name: Lipo universal artefacts (macOS)
+        if: matrix.os == 'macos'
+        run: |
+          chmod +x script/lipo-macos-artefacts.sh
+          ./script/lipo-macos-artefacts.sh \
+            "build-arm64/plugin/TONE3000_artefacts/${{ env.BUILD_TYPE }}" \
+            "build-x86_64/plugin/TONE3000_artefacts/${{ env.BUILD_TYPE }}" \
+            "build/plugin/TONE3000_artefacts/${{ env.BUILD_TYPE }}"
+
+      # macOS: import Developer ID certs into a temp keychain.
+      # Bails out gracefully if signing secrets are not configured. In that
+      # case create-pkg.sh falls back to ad-hoc signing.
+      #
+      # Note: APPLE_APP_PASSWORD is reused as the .p12 import password because
+      # the .p12 files were exported using the same value.
+      - name: Setup macOS signing keychain
+        if: matrix.os == 'macos'
+        env:
+          MACOS_CERTIFICATE_APP: ${{ secrets.MACOS_CERTIFICATE_APP }}
+          MACOS_CERTIFICATE_PKG: ${{ secrets.MACOS_CERTIFICATE_PKG }}
+          KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${MACOS_CERTIFICATE_APP:-}" || -z "${MACOS_CERTIFICATE_PKG:-}" ]]; then
+            echo "Signing secrets not configured; build will be ad-hoc signed."
+            exit 0
+          fi
+
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain   -p "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
+
+          echo "$MACOS_CERTIFICATE_APP" | base64 --decode -o "$RUNNER_TEMP/app.p12"
+          security import "$RUNNER_TEMP/app.p12" \
+            -P "$APPLE_APP_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+
+          echo "$MACOS_CERTIFICATE_PKG" | base64 --decode -o "$RUNNER_TEMP/pkg.p12"
+          security import "$RUNNER_TEMP/pkg.p12" \
+            -P "$APPLE_APP_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+
+          rm -f "$RUNNER_TEMP/app.p12" "$RUNNER_TEMP/pkg.p12"
+
+          # Let codesign / productbuild use the keys without UI prompts.
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign:,productbuild: \
+            -s -k "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
+
+          # Put our keychain at the front of the search list (keep the rest).
+          security list-keychain -d user -s "$KEYCHAIN_PATH" \
+            $(security list-keychain -d user | sed 's/[[:space:]"]//g')
+
+          echo "Cert identities now visible to codesign:"
+          security find-identity -v -p basic "$KEYCHAIN_PATH"
+
+          # Save notarytool credentials in our temp keychain (only used by us).
+          xcrun notarytool store-credentials "tone3000-notary" \
+            --apple-id  "$APPLE_ID" \
+            --team-id   "$APPLE_TEAM_ID" \
+            --password  "$APPLE_APP_PASSWORD" \
+            --keychain  "$KEYCHAIN_PATH"
+
+      # AAX must carry PACE's signature or Pro Tools refuses to load it.
+      # Signed via PACE Eden cloud signing: a headless iLok Cloud session
+      # authorizes wraptool, which applies the PACE signature and the Apple
+      # Developer ID signature in one pass (so create-pkg.sh skips re-signing
+      # this bundle; see sign_bundle there). The Eden tools are not
+      # redistributable and are fetched from a private URL. Bails out
+      # gracefully when the PACE secrets are not configured; the AAX is then
+      # ad-hoc signed like the other formats and only loads in Pro Tools
+      # Developer builds.
+      - name: Sign AAX with PACE (macOS)
+        if: matrix.os == 'macos'
+        env:
+          PACE_ILOK_ACCOUNT: ${{ secrets.PACE_ILOK_ACCOUNT }}
+          PACE_ILOK_PASSWORD: ${{ secrets.PACE_ILOK_PASSWORD }}
+          PACE_WCGUID: ${{ secrets.PACE_WCGUID }}
+          PACE_TOOLS_URL: ${{ secrets.PACE_TOOLS_URL_MAC }}
+          PACE_TOOLS_TOKEN: ${{ secrets.PACE_TOOLS_TOKEN }}
+          SIGN_ID_APP: ${{ secrets.SIGN_ID_APP }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${PACE_ILOK_ACCOUNT:-}" || -z "${SIGN_ID_APP:-}" ]]; then
+            echo "PACE signing secrets not configured; AAX will be ad-hoc signed."
+            exit 0
+          fi
+          chmod +x script/sign-aax-macos.sh
+          ./script/sign-aax-macos.sh \
+            "build/plugin/TONE3000_artefacts/${{ env.BUILD_TYPE }}/AAX/TONE3000.aaxplugin"
+
+      - name: Build .pkg installer (macOS)
+        if: matrix.os == 'macos'
+        env:
+          SIGN_ID_APP: ${{ secrets.SIGN_ID_APP }}
+          SIGN_ID_PKG: ${{ secrets.SIGN_ID_PKG }}
+          NOTARY_PROFILE: tone3000-notary
+        run: |
+          set -euo pipefail
+          ./script/create-pkg.sh
+
+          # Tag the installer with platform + arch (matches the Windows/Linux
+          # artifact naming: TONE3000-v<version>-<platform>-<arch>).
+          SRC=$(ls build/TONE3000-v*.pkg | head -n 1)
+          DEST="build/$(basename "${SRC%.pkg}")-macos-universal.pkg"
+          mv "$SRC" "$DEST"
+          echo "Renamed installer to $DEST"
+
+      - name: Clean up macOS signing keychain
+        if: matrix.os == 'macos' && always()
+        env:
+          KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          if [[ -f "$KEYCHAIN_PATH" ]]; then
+            security delete-keychain "$KEYCHAIN_PATH" || true
+          fi
+
+      - name: Upload artifacts (macOS)
+        if: matrix.os == 'macos' && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TONE3000-v${{ env.T3K_VERSION }}-${{ matrix.os }}-${{ matrix.arch }}
+          path: build/TONE3000-v*-macos-universal.pkg
+          if-no-files-found: error
 
       # Linux: tarball with install script (the usual convention on Linux).
       - name: Package tarball (Linux)
@@ -163,4 +346,60 @@ jobs:
         with:
           name: TONE3000-v${{ env.T3K_VERSION }}-${{ matrix.os }}-${{ matrix.arch }}
           path: build/TONE3000-v*-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          if-no-files-found: error
+
+  # iOS Simulator: configure and build the Standalone app for the iPad
+  # Simulator so the iOS target cannot silently rot. No signing, no
+  # installer: the unsigned Simulator .app is uploaded for QA. Xcode is the
+  # generator here (the iOS presets need it for the app bundle and the
+  # multi-config build), and it does not honour the sccache compiler
+  # launchers, so this job builds cold.
+  ios-simulator:
+    name: iOS Simulator
+    runs-on: macos-14
+    environment: builds
+    env:
+      T3K_PUBLISHABLE_KEY: ${{ secrets.T3K_PUBLISHABLE_KEY }}
+      T3K_UPDATE_NOTICE: ${{ secrets.T3K_UPDATE_NOTICE }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Read version
+        run: echo "T3K_VERSION=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_ENV"
+
+      - name: Cache CPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            libs/juce
+            libs/googletest
+            libs/clap-juce-extensions
+          key: cpm-deps-ios-${{ hashFiles('CMakeLists.txt', 'plugin/CMakeLists.txt') }}
+
+      - name: Configure CMake (iOS Simulator)
+        run: cmake --preset ios-simulator
+
+      - name: Build Standalone (iOS Simulator)
+        run: |
+          cmake --build build-ios --config ${{ env.BUILD_TYPE }} \
+            --target TONE3000_Standalone --parallel -- -sdk iphonesimulator
+
+      - name: Package Simulator app
+        run: |
+          set -euo pipefail
+          APP="build-ios/plugin/TONE3000_artefacts/${{ env.BUILD_TYPE }}/Standalone/TONE3000.app"
+          test -d "$APP"
+          ditto -c -k --keepParent "$APP" \
+            "build-ios/TONE3000-v${T3K_VERSION}-ios-simulator.zip"
+
+      - name: Upload artifacts (iOS Simulator)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TONE3000-v${{ env.T3K_VERSION }}-ios-simulator
+          path: build-ios/TONE3000-v*-ios-simulator.zip
           if-no-files-found: error
