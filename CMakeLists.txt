@@ -146,10 +146,20 @@ if (UNIX AND NOT APPLE AND NOT HEADLESS)
 endif()
 
 # Download JUCE using CPM
+#
+# Pinned to the tip of JUCE's `wayland` preview branch (JUCE 9.0.5), which
+# adds the native Wayland backend and zwp_text_input_v3 support the Pi kiosk
+# needs. Pin the commit SHA, not the branch name: the preview branch is
+# rebased and force-pushed upstream, so a moving ref would make kiosk builds
+# irreproducible. Update deliberately, then re-audit the T3K_* source patches
+# below.
+#
+# Resolved 2026-10-21 from:
+#   git ls-remote https://github.com/juce-framework/JUCE refs/heads/wayland
 CPMAddPackage(
     NAME JUCE
-    GIT_TAG 9.0.3
-    VERSION 9.0.3
+    GIT_TAG 641a713d3ae469830a0ca6dbd2eb21744244977a
+    VERSION 9.0.5
     GITHUB_REPOSITORY juce-framework/JUCE
     SOURCE_DIR ${LIB_DIR}/juce
 )
