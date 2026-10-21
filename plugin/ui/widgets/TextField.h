@@ -24,22 +24,14 @@ public:
   void setText(const juce::String& text, bool notify = false);
   juce::String text() const { return editor_.getText(); }
   void setFontSize(float px);
-  // Any face (the MIDI CC field is Roboto Mono).
   void setFont(const juce::Font& font);
   void setCornerRadius(float radius) { radius_ = radius; }
-  // CSS padding: vertical, left, right.
   void setPadding(int vertical, int left, int right);
   void setBackground(juce::Colour colour) { background_ = colour; }
   void setBorder(std::optional<juce::Colour> colour) { border_ = colour; }
   void setJustification(juce::Justification just) { editor_.setJustification(just); }
-  // Glyph inside the field at `left` px, vertically centred (the search
-  // fields' magnifier); the left padding should leave room for it.
   void setLeadingIcon(Icon icon, float size, int left, juce::Colour colour);
-  // An × `right` px from the right edge while there is text; pressing it
-  // empties the field (onChange) and fires onClear. The right padding
-  // should leave room for it.
   void setClearButton(int size, int right);
-  // Select-all + focus.
   void focus();
   bool hasFocus() const { return editor_.hasKeyboardFocus(true); }
 
@@ -50,15 +42,15 @@ public:
   std::function<void()> onFocus;
   std::function<void()> onClear;
 
-  void paint(juce::Graphics& g) override;
-  void resized() override;
-
 private:
   void textEditorTextChanged(juce::TextEditor&) override;
   void textEditorReturnKeyPressed(juce::TextEditor&) override;
   void textEditorEscapeKeyPressed(juce::TextEditor&) override;
   void textEditorFocusLost(juce::TextEditor&) override;
   void globalFocusChanged(juce::Component* focused) override;
+
+  void paint(juce::Graphics& g) override;
+  void resized() override;
 
   juce::TextEditor editor_;
   bool focused_ = false;

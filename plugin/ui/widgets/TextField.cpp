@@ -3,6 +3,7 @@
 #include "core/Fonts.h"
 #include "core/Paint.h"
 #include "core/Theme.h"
+#include "keyboard/VirtualKeyboard.h"
 
 namespace t3k::ui {
 
