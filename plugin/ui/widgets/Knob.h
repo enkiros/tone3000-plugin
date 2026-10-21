@@ -64,10 +64,10 @@ public:
     bool labelOnTop = false;
   };
 
-  // Every knob label is 14px in a 17px slot; the editor overflows that slot
+  // Every knob label is now 16px in a 19px slot; the editor overflows that slot
   // by 2px each way, which the component's bounds include at the bottom.
-  static constexpr int kLabelSize = 14;
-  static constexpr int kLabelSlot = 17;  // round(14 * 1.2)
+  static constexpr int kLabelSize = 16;
+  static constexpr int kLabelSlot = 19;  // round(16 * 1.2)
   static constexpr int kEditorOverflow = 2;
   static int heightFor(int size) {
     return size + theme::kKnobLabelGap + kLabelSlot + kEditorOverflow;

@@ -13,6 +13,8 @@ namespace {
 constexpr int kGap = 10;
 // Chrome boxes in a bottom-aligned row sit on the secondary-knob centreline.
 constexpr int kChromeLift = theme::faceplateChromeLift(theme::kKnobSizeSecondary);
+// Larger knob for 7" kiosk display touch targets
+constexpr int kLargeSecondary = 42;
 
 // One detent per semitone across ±24.
 constexpr int kSemitoneSteps = 2 * 24 + 1;
@@ -20,7 +22,7 @@ constexpr int kSemitoneSteps = 2 * 24 + 1;
 Knob::Options semitoneKnob() {
   Knob::Options o;
   o.label = "Pitch";
-  o.size = theme::kKnobSizeSecondary;
+  o.size = kLargeSecondary;
   o.thumb = Knob::Thumb::secondary;
   o.variant = Knob::Variant::bipolar;  // noon = 0 st
   o.scale = &scales::semitones();

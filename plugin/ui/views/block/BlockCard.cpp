@@ -25,12 +25,14 @@ constexpr int kInfoBottomPad = 24;
 constexpr int kEqPillPadX = 12, kEqPillPadY = 4, kEqPillGap = 16;
 constexpr int kSelectHeight = 36;
 constexpr float kImageBusyOpacity = 0.35f;
+// Larger trim knob for 7" kiosk display touch targets
+constexpr int kLargeTrimKnob = 45;
 const juce::Colour kNestedTrack(118, 118, 128);
 
 Knob::Options trimKnob(const char* label, const KnobScale& scale, float defaultValue, help::Key help) {
   Knob::Options o;
   o.label = label;
-  o.size = theme::kKnobSizeSecondary;
+  o.size = kLargeTrimKnob;
   o.thumb = Knob::Thumb::secondary;
   o.scale = &scale;
   o.defaultValue = defaultValue;

@@ -33,6 +33,7 @@ PluginRoot::PluginRoot(Services& services)
 
   banner_.onAction = [this](BannerAction action) { handleBannerAction(action); };
   banner_.onDismiss = [this](const juce::String& id) { services_.banners.dismiss(id); };
+  banner_.setVisible(false);  // Disable all top banners
 
   // Network-dependent entry points pass the connection gate first.
   // A plain login lands back on the chain. One sign-in at a time: the

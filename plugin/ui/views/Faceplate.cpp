@@ -29,9 +29,9 @@ constexpr int kChromeLift = theme::faceplateChromeLift(theme::kKnobSizeSecondary
 constexpr int kInputModeWidth = 1 + 2 + (theme::kIconSize + 3) + 3 + 10 + 2 + 1;
 constexpr int kMenuWidth = 224;  // fits "Stereo Dual Mono (L&R)"
 constexpr int kMenuPadTop = 12, kMenuPadSide = 8, kMenuPadBottom = 8;
-constexpr int kMenuTitleHeight = 13;  // 11px/600 line
+constexpr int kMenuTitleHeight = 13;  // Input Mode title: 13px (was 11px)
 constexpr int kMenuTitlePadBottom = 8;
-constexpr int kMenuRowHeight = 33;    // 9px padding + 13px text line
+constexpr int kMenuRowHeight = 39;    // 9px padding + 15px text line (was 13px)
 constexpr int kMenuGap = 14;          // bottom: calc(100% + 14)
 
 Knob::Options primaryKnob(const char* label, const KnobScale& scale, float def, help::Key help) {
@@ -150,7 +150,7 @@ private:
       auto content = getLocalBounds().reduced(12, 0);
       drawModeGlyph(g, option_.mode, content.removeFromLeft(theme::kIconBoxSize).toFloat(), colour);
       content.removeFromLeft(12);
-      paint::text(g, option_.label, content, Fonts::sans(13), colour);
+      paint::text(g, option_.label, content, Fonts::sans(15), colour);
     }
 
   private:
@@ -184,7 +184,7 @@ private:
       paint::border(g, box, theme::kPanelCorner, theme::kBorder);
       auto title = contentBounds().reduced(kMenuPadSide, 0).removeFromTop(kMenuPadTop + kMenuTitleHeight);
       title.removeFromTop(kMenuPadTop);
-      paint::text(g, "Input Mode", title.reduced(12, 0), Fonts::sans(11, true), theme::kSubtle);
+      paint::text(g, "Input Mode", title.reduced(12, 0), Fonts::sans(13, true), theme::kSubtle);
     }
     void resized() override {
       auto area = contentBounds().reduced(kMenuPadSide, 0);
@@ -349,7 +349,8 @@ void Faceplate::resized() {
   const int knobBottom = baseline + Knob::kEditorOverflow;
   const auto knobY = [&](int size) { return knobBottom - Knob::heightFor(size); };
   const int chromeY = baseline - theme::kIconBoxSize + kChromeLift;
-  const int primary = theme::kKnobSizePrimary, secondary = theme::kKnobSizeSecondary, box = theme::kIconBoxSize;
+  // Larger knobs for 7" kiosk display
+  const int primary = 60, secondary = 45, box = theme::kIconBoxSize;
 
   // The peers share the plate width (space-between). Their footprints are
   // fixed; the input group grows when the input-mode button shows, and the
