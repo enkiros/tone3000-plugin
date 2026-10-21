@@ -27,7 +27,7 @@ inline void border(juce::Graphics& g, juce::Rectangle<float> box, float radius, 
   if (radius <= 0.0f)
     g.drawRect(box, width);
   else
-    g.drawRoundedRectangle(inner, static_cast<float>(std::max(0, (int)(radius - width * 0.5f))), width);
+    g.drawRoundedRectangle(inner, std::max(0.0f, radius - width * 0.5f), width);
 }
 
 // CSS `border: Npx dashed` on a border-box: Chromium draws dashes 3× the
