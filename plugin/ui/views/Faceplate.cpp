@@ -23,7 +23,7 @@ constexpr int kToneGap = 24;   // between the three tone knobs
 // so the two read as one group against the wider peer gap.
 constexpr int kEffectsGap = kToneGap;
 // Chrome boxes in a bottom-aligned row sit on the secondary-knob centreline.
-constexpr int kChromeLift = theme::faceplateChromeLift(theme::kKnobSizeSecondary);
+constexpr int kChromeLift = theme::faceplateChromeLift(theme::kKnobSizeFaceSecondary);
 
 // Input mode trigger: [glyph 17][gap 3][chevron 10] + 2px padding + 1px border.
 constexpr int kInputModeWidth = 1 + 2 + (theme::kIconSize + 3) + 3 + 10 + 2 + 1;
@@ -37,6 +37,7 @@ constexpr int kMenuGap = 14;          // bottom: calc(100% + 14)
 Knob::Options primaryKnob(const char* label, const KnobScale& scale, float def, help::Key help) {
   Knob::Options o;
   o.label = label;
+  o.size = theme::kKnobSizeFacePrimary;
   o.scale = &scale;
   o.defaultValue = def;
   o.help = help;
@@ -46,7 +47,7 @@ Knob::Options primaryKnob(const char* label, const KnobScale& scale, float def, 
 Knob::Options secondaryKnob(const char* label, const KnobScale& scale, float def, help::Key help,
                             Knob::Variant variant = Knob::Variant::full) {
   auto o = primaryKnob(label, scale, def, help);
-  o.size = theme::kKnobSizeSecondary;
+  o.size = theme::kKnobSizeFaceSecondary;
   o.thumb = Knob::Thumb::secondary;
   o.variant = variant;
   return o;
@@ -349,8 +350,8 @@ void Faceplate::resized() {
   const int knobBottom = baseline + Knob::kEditorOverflow;
   const auto knobY = [&](int size) { return knobBottom - Knob::heightFor(size); };
   const int chromeY = baseline - theme::kIconBoxSize + kChromeLift;
-  // Larger knobs for 7" kiosk display
-  const int primary = 60, secondary = 45, box = theme::kIconBoxSize;
+  const int primary = theme::kKnobSizeFacePrimary, secondary = theme::kKnobSizeFaceSecondary,
+            box = theme::kIconBoxSize;
 
   // The peers share the plate width (space-between). Their footprints are
   // fixed; the input group grows when the input-mode button shows, and the

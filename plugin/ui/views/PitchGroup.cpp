@@ -12,9 +12,7 @@ namespace {
 // The plate's knob-to-companion gap (Faceplate's kGroupGap).
 constexpr int kGap = 10;
 // Chrome boxes in a bottom-aligned row sit on the secondary-knob centreline.
-constexpr int kChromeLift = theme::faceplateChromeLift(theme::kKnobSizeSecondary);
-// Larger knob for 7" kiosk display touch targets
-constexpr int kLargeSecondary = 42;
+constexpr int kChromeLift = theme::faceplateChromeLift(theme::kKnobSizeFaceSecondary);
 
 // One detent per semitone across ±24.
 constexpr int kSemitoneSteps = 2 * 24 + 1;
@@ -22,7 +20,7 @@ constexpr int kSemitoneSteps = 2 * 24 + 1;
 Knob::Options semitoneKnob() {
   Knob::Options o;
   o.label = "Pitch";
-  o.size = kLargeSecondary;
+  o.size = theme::kKnobSizeFaceSecondary;
   o.thumb = Knob::Thumb::secondary;
   o.variant = Knob::Variant::bipolar;  // noon = 0 st
   o.scale = &scales::semitones();
@@ -89,9 +87,9 @@ void PitchGroup::toggleDeck() {
 
 void PitchGroup::resized() {
   const int baseline = getHeight() - Knob::kEditorOverflow;  // the label slot's bottom edge
-  dim_.setBounds(0, 0, theme::kKnobSizeSecondary, getHeight());
+  dim_.setBounds(0, 0, theme::kKnobSizeFaceSecondary, getHeight());
   semitones_.setTopLeftPosition(0, 0);
-  power_.setTopLeftPosition(theme::kKnobSizeSecondary + kGap, baseline - theme::kIconBoxSize + kChromeLift);
+  power_.setTopLeftPosition(theme::kKnobSizeFaceSecondary + kGap, baseline - theme::kIconBoxSize + kChromeLift);
 }
 
 }  // namespace t3k::ui

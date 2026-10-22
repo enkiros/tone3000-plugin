@@ -19,14 +19,6 @@ inline constexpr int kWidth = 1024;
 // Core UI height (content only; Figma's 600 includes a 22px mock title bar).
 inline constexpr int kHeight = 578;
 
-// Chrome strips that grow the window instead of squishing the core.
-inline constexpr int kBannerHeight = 44;   // AppBanner.tsx
-inline constexpr int kHeaderHeight = 45;   // chainLayout.tsx
-inline constexpr int kPlateHeight = 108;   // Faceplate.tsx
-
-// Editor window scale range (aspect-locked corner drags).
-inline constexpr double kMaxScale = 2.0;
-
 // Platform flags, known at compile time. kCoarsePointer is a touch
 // platform (no hover, ever); it fixes the hint copy and seeds
 // Services::pointer, which on a desktop build follows the input that
@@ -45,6 +37,17 @@ inline constexpr bool kCoarsePointer = true;
 #else
 inline constexpr bool kCoarsePointer = false;
 #endif
+
+// Chrome strips that grow the window instead of squishing the core.
+inline constexpr int kBannerHeight = 44;   // AppBanner.tsx
+inline constexpr int kHeaderHeight = 45;   // chainLayout.tsx
+// The faceplate grows for the larger touch knobs (a 60px primary knob plus
+// its 16px label column needs ~120px); desktop keeps 108. The main screen
+// above the plate takes the difference.
+inline constexpr int kPlateHeight = kCoarsePointer ? 120 : 108;  // Faceplate.tsx
+
+// Editor window scale range (aspect-locked corner drags).
+inline constexpr double kMaxScale = 2.0;
 
 #if JUCE_MAC || JUCE_IOS
 inline constexpr bool kAppleModifierGlyphs = true;

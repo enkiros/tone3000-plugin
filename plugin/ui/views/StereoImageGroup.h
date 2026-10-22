@@ -34,7 +34,7 @@ public:
   // for the advert, the widest face.
   static constexpr int kWidth = 148;
   // The slot is as tall as a primary knob column (the plate bottom-aligns it).
-  static int height() { return Knob::heightFor(theme::kKnobSizePrimary); }
+  static int height() { return Knob::heightFor(theme::kKnobSizeFacePrimary); }
 
   StereoImageGroup(Services& services, ImageFeature feature);
   ~StereoImageGroup() override;

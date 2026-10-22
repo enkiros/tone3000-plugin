@@ -25,14 +25,12 @@ constexpr int kInfoBottomPad = 24;
 constexpr int kEqPillPadX = 12, kEqPillPadY = 4, kEqPillGap = 16;
 constexpr int kSelectHeight = 36;
 constexpr float kImageBusyOpacity = 0.35f;
-// Larger trim knob for 7" kiosk display touch targets
-constexpr int kLargeTrimKnob = 45;
 const juce::Colour kNestedTrack(118, 118, 128);
 
 Knob::Options trimKnob(const char* label, const KnobScale& scale, float defaultValue, help::Key help) {
   Knob::Options o;
   o.label = label;
-  o.size = kLargeTrimKnob;
+  o.size = theme::kKnobSizeFaceSecondary;
   o.thumb = Knob::Thumb::secondary;
   o.scale = &scale;
   o.defaultValue = defaultValue;
@@ -545,7 +543,7 @@ void BlockCard::layoutHeader(juce::Rectangle<int> header) {
 
 void BlockCard::layoutToneBody(juce::Rectangle<int> body) {
   const auto content = body.reduced(kBodyPadding);
-  const int knobW = theme::kKnobSizeSecondary;
+  const int knobW = theme::kKnobSizeFaceSecondary;
   const int bottom = content.getBottom();
 
   // In rail: meter centred in the space above the knob (gap 12).
