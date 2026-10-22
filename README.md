@@ -170,6 +170,34 @@ device without any conversions") open the card exclusively, which takes the
 whole interface away from every other app while the standalone runs. The
 JACK driver shares it.
 
+## Linux: Wayland and the on-screen keyboard
+
+The **standalone** app runs natively on Wayland when `WAYLAND_DISPLAY` is
+set: JUCE's Wayland backend gives it the compositor's text-input protocol, so
+the system on-screen keyboard (squeekboard on Raspberry Pi OS) opens for any
+text field. Plugin formats keep using X11/XWayland by design — the host owns
+the window — so OSK integration is standalone-only.
+
+- **No extra build dependencies.** JUCE dlopens `libwayland-client`,
+  `libdecor` and `libxkbcommon`; the existing GTK3/X11 build packages still
+  apply. An X server is not needed for the standalone's Wayland path.
+- **Launch inside the Wayland session.** `WAYLAND_DISPLAY` must reach the
+  app's environment, or JUCE falls back to X11.
+- **Keep focused fields above the keyboard.** squeekboard overlays the bottom
+  of the window instead of resizing it. Set `T3K_OSK_HEIGHT` to the keyboard
+  height in design px (e.g. `220` on the 1024×600 Pi kiosk); focused text
+  editors then scroll above it. The default `0` leaves desktop behaviour
+  unchanged.
+- **squeekboard must be running before a field asks for input.** Raspberry Pi
+  OS's Control Centre enables it and writes the autostart entry.
+
+Build/run/verify notes and the Pi 5 setup:
+[`docs/rpi-wayland-osk.md`](docs/rpi-wayland-osk.md).
+
+The backend comes from the pinned JUCE `wayland` preview branch (see the root
+`CMakeLists.txt`); the UI side is `plugin/ui/core/Keyboard.h` and
+`DragScroller::reveal`.
+
 ## Audio processing
 
 The plugin is a JUCE processor running a chain of NAM and IR blocks, anchored

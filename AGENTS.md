@@ -3,9 +3,11 @@
 JUCE/C++ audio plugin (VST3/AU/AAX/LV2/CLAP/Standalone) that loads Neural Amp
 Modeler captures and IRs from TONE3000, with a fully native C++ UI (no browser
 engine). Deep dives live in [`README.md`](README.md) (build/run, DSP signal
-flow, settings stores) and [`plugin/ui/README.md`](plugin/ui/README.md) (UI
-architecture, testbed, conventions). Read those before touching code; this file
-is only the tripwires.
+flow, settings stores), [`plugin/ui/README.md`](plugin/ui/README.md) (UI
+architecture, testbed, conventions), and
+[`docs/rpi-wayland-osk.md`](docs/rpi-wayland-osk.md) (native Wayland and the
+on-screen keyboard). Read those before touching code; this file is only the
+tripwires.
 
 ## Build — get these right or you'll waste a cycle
 
@@ -23,6 +25,9 @@ is only the tripwires.
   ```
 - Format/target toggles: `-DHEADLESS=ON`, `-DBUILD_AAX=OFF`, `-DBUILD_LV2=OFF`,
   `-DBUILD_CLAP=OFF`, `-DT3K_BUILD_UI_TESTBED=ON`.
+- **On the Pi, build the standalone only:** `cmake --build build --target
+  TONE3000_Standalone -j4` with the format toggles above; the first build is
+  long on 4 GB RAM / 4 cores (drop to `-j2` if linking runs out of memory).
 - **`VERSION` (repo root) is the version source of truth.** CMake, packaging
   scripts, and CI all read it; it auto-triggers reconfigure when edited. Don't
   bump versions in CMake files.
@@ -39,6 +44,28 @@ no-op, and a moved/missing anchor raises `FATAL_ERROR` at configure. JUCE is
 pinned by commit SHA (the `wayland` preview branch, 9.0.5) — do not switch it
 back to a branch ref. If you bump JUCE or a patch stops applying, re-audit the
 anchors in `CMakeLists.txt`; do not "fix" the tree by editing `libs/juce`.
+
+## Native Wayland and the on-screen keyboard
+
+- **Backend selection is JUCE's.** `shouldUseWaylandBackend()` picks Wayland
+  only for standalone apps with `WAYLAND_DISPLAY` set; plugin windows stay on
+  X11/XWayland. Don't add a parallel Wayland plugin path.
+- **OSK = compositor text-input, not an in-app keyboard.** The standalone
+  binds `zwp_text_input_manager_v3`; labwc forwards it to squeekboard
+  (input-method-v2). The abandoned in-app `VirtualKeyboard` (commit `44310c7`)
+  was reverted — don't resurrect it.
+- **Keep focused text fields above the OSK.** `T3K_OSK_HEIGHT` (design px,
+  default `0`) is read by `plugin/ui/core/Keyboard.h`; `DragScroller::reveal`
+  applies it as a bottom inset for a focused `juce::TextEditor`. The Pi kiosk
+  sets ~`220`. Don't hardcode keyboard heights in views.
+- **squeekboard must already be running** when a field gains focus. RPiOS's
+  Control Centre writes `/etc/xdg/autostart/squeekboard.desktop`, which runs
+  `/usr/bin/sbtest` (starts it only if a touch device is detected).
+- **Debugging:** run with `WAYLAND_DEBUG=1` and look for
+  `zwp_text_input_v3.enable` / `set_cursor_rectangle` / `commit_string`;
+  `busctl --user get-property sm.puri.OSK0 /sm/puri/OSK0 sm.puri.OSK0 Visible`;
+  `grim` for screenshots. Full guide:
+  [`docs/rpi-wayland-osk.md`](docs/rpi-wayland-osk.md).
 
 ## Tests
 

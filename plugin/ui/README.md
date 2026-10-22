@@ -198,6 +198,11 @@ from (`port of KnobControl.tsx`); that is lineage, recorded in
   rest (Tab from nothing, Escape / press elsewhere blur). Decorative
   components call `setAccessible(false)`; status that only paints elsewhere
   goes through `help::announce()`. See native-ui.md §5.8a.
+- **On-screen keyboard.** `DragScroller` keeps a focused `juce::TextEditor`
+  above a bottom-covering OSK by reading `T3K_OSK_HEIGHT` (design px, via
+  `core/Keyboard.h`) and passing it to `reveal` as a bottom inset; `0` (the
+  default) changes nothing. Views must not hardcode keyboard heights. See
+  [`docs/rpi-wayland-osk.md`](../../docs/rpi-wayland-osk.md).
 - **Pixels.** New or changed visuals get a scenario (an entry in
   `testbed/fixtures/scenarios.json`) and a matching drive in `Scenarios.cpp`
   if it needs one. The before/after capture diff is the acceptance test;
