@@ -52,7 +52,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: false
+
+      # Two third-party submodules (AudioDSPTools and NeuralAmpModelerCore)
+      # pin a nested eigen submodule to https://gitlab.com/libeigen/eigen at a
+      # commit that is not the tip of any branch/tag (6d829e76). A shallow
+      # recursive clone can't reach it, falls back to a direct-SHA fetch, and
+      # GitLab refuses that ("remote error: GitLab is currently unable to
+      # handle this request due to load"). actions/checkout's built-in
+      # submodule handling does exactly that and does not retry, so the whole
+      # job dies here before it ever configures or compiles.
+      #
+      # Init submodules ourselves instead: rewrite the gitlab eigen URL to a
+      # GitHub mirror (GitHub allows fetching reachable SHAs), and retry the
+      # update to absorb any remaining transient network failures. The
+      # --depth=1 flag is deliberately omitted so a pinned non-tip commit is
+      # always reachable through normal history.
+      - name: Init submodules
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global url."https://github.com/eigenteam/eigen-git-mirror".insteadOf \
+            "https://gitlab.com/libeigen/eigen"
+          git submodule sync --recursive
+          for attempt in 1 2 3 4 5; do
+            if git submodule update --init --recursive; then
+              exit 0
+            fi
+            echo "submodule update failed (attempt ${attempt}); retrying in 10s..."
+            sleep 10
+          done
+          echo "submodule update failed after 5 attempts" >&2
+          exit 1
 
       # Single source of truth: the repo-root VERSION file (CMake and the
       # packaging scripts read it directly; CI exports it for the steps that
