@@ -6,7 +6,7 @@
 #   ./script/test-dsp.sh                     # configure/build/run in one go
 #   ./script/test-dsp.sh 'IrConvolutionTest.*'   # gtest filter
 #
-# or by hand: cmake --build build --target DspTests, then run the binary in
+# or by hand: cmake --build build -j4 --target DspTests, then run the binary in
 # build/test/DspTests_artefacts (also registered with ctest).
 
 # The root project only enables CXX; the JUCE modules this app pulls in

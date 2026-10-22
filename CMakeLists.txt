@@ -156,10 +156,40 @@ endif()
 #
 # Resolved 2026-10-21 from:
 #   git ls-remote https://github.com/juce-framework/JUCE refs/heads/wayland
+set(T3K_JUCE_GIT_TAG 641a713d3ae469830a0ca6dbd2eb21744244977a)
+set(T3K_JUCE_VERSION 9.0.5)
+
+# libs/ is gitignored and disposable, but this checkout is dirty by design:
+# every configure ends with the T3K_* source patches below applied in place.
+# When the pin moves, FetchContent stashes those edits, checks out the new
+# commit, then tries to reapply the stash. Upstream has usually rewritten the
+# same lines, so the pop conflicts and configure dies with
+#   Failed to unstash changes in: '.../libs/juce'
+# and restores the old commit, deadlocking every later configure too. Drop the
+# local edits before FetchContent sees the tree; the patch pass below recreates
+# them immediately after the fetch, so nothing is lost.
+if (EXISTS "${LIB_DIR}/juce/.git")
+    execute_process(
+        COMMAND git -C "${LIB_DIR}/juce" rev-parse HEAD
+        OUTPUT_VARIABLE _t3k_juce_head
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE _t3k_juce_head_result
+        ERROR_QUIET)
+    if (_t3k_juce_head_result EQUAL 0 AND NOT _t3k_juce_head STREQUAL T3K_JUCE_GIT_TAG)
+        message(STATUS "JUCE checkout is ${_t3k_juce_head}, pinned ${T3K_JUCE_GIT_TAG}: discarding local edits before update")
+        execute_process(
+            COMMAND git -C "${LIB_DIR}/juce" reset --hard --quiet
+            RESULT_VARIABLE _t3k_juce_reset_result)
+        if (NOT _t3k_juce_reset_result EQUAL 0)
+            message(WARNING "Could not discard local JUCE edits; the update to ${T3K_JUCE_GIT_TAG} may fail")
+        endif()
+    endif()
+endif()
+
 CPMAddPackage(
     NAME JUCE
-    GIT_TAG 641a713d3ae469830a0ca6dbd2eb21744244977a
-    VERSION 9.0.5
+    GIT_TAG ${T3K_JUCE_GIT_TAG}
+    VERSION ${T3K_JUCE_VERSION}
     GITHUB_REPOSITORY juce-framework/JUCE
     SOURCE_DIR ${LIB_DIR}/juce
 )

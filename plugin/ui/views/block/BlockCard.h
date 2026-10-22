@@ -22,6 +22,7 @@
 #include "BlockEqView.h"
 #include "ToneMeta.h"
 #include "core/AsyncScope.h"
+#include "core/Theme.h"
 #include "model/ChainState.h"
 #include "model/Tone.h"
 #include "services/ParamBinding.h"
@@ -45,7 +46,7 @@ public:
   // chainLayout.tsx: 16px-radius card, 45px chrome header, 275px padded
   // body (the last 2px hide under the border, so 273 show).
   static constexpr int kWidth = 800;
-  static constexpr int kHeaderHeight = 45;
+  static constexpr int kHeaderHeight = theme::kCardHeaderHeight;
   static constexpr int kBodyHeight = 275;
   static constexpr int kBodyPadding = 16;
   static constexpr int kHeight = kHeaderHeight + kBodyHeight;

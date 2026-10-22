@@ -17,7 +17,9 @@ tripwires.
 - **`libs/` is gitignored and regenerated.** JUCE, GoogleTest, freetype,
   clap-juce-extensions are fetched by CPM into `libs/` on first configure.
   Never hand-edit or commit anything under `libs/`; your changes are discarded
-  on the next configure.
+  on the next configure. A `libs/juce` left at an older pin (with the T3K
+  patches applied) is reset to the pinned SHA automatically at configure, then
+  re-patched — a pin bump needs no manual sync.
 - **Linux must use the toolchain file** (`cmake/linux-toolchain.cmake`), which
   pulls pkg-config + GTK3 and wires the static-FreeType block:
   ```sh
@@ -76,7 +78,7 @@ anchors in `CMakeLists.txt`; do not "fix" the tree by editing `libs/juce`.
   DSP. The repo root must be configured once first (to fetch JUCE), then:
   ```sh
   cmake -S plugin/ui/testbed -B build-ui -DCMAKE_BUILD_TYPE=Debug
-  cmake --build build-ui -j
+  cmake --build build-ui -j4
   ```
   Run the binary with `--selftest`, `--scenario <id>`, `--capture`,
   `--compare`, or `--bench`. Scenario ids come from

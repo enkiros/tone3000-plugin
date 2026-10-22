@@ -13,8 +13,8 @@ ChromeTextButton::ChromeTextButton(juce::String label, help::Key help)
   setHelpText(help::text(help));
   setMouseCursor(juce::MouseCursor::PointingHandCursor);
   // border-box: 4px padding inside a 1px border each side.
-  const float text = Fonts::width(Fonts::mono(kFontPx), label_);
-  setSize(juce::roundToInt(text + 2 * (kPadX + 1)), theme::kTextBoxHeight);
+  const float text = Fonts::width(Fonts::mono(theme::kTextChromeFontPx), label_);
+  setSize(juce::roundToInt(text + 2 * (theme::kTextChromePadX + 1)), theme::kTextBoxHeight);
 }
 
 void ChromeTextButton::setArmed(bool armed) {
@@ -39,7 +39,8 @@ void ChromeTextButton::paintButton(juce::Graphics& g, bool, bool) {
   } else {
     paint::border(g, box, theme::kIconBoxRadius, theme::kBorder.withMultipliedAlpha(alpha));
   }
-  paint::capText(g, label_, box, Fonts::mono(kFontPx), kFontPx, fg.withMultipliedAlpha(alpha));
+  paint::capText(g, label_, box, Fonts::mono(theme::kTextChromeFontPx), theme::kTextChromeFontPx,
+                 fg.withMultipliedAlpha(alpha));
 }
 
 }  // namespace t3k::ui

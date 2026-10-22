@@ -3,13 +3,15 @@
 #
 #   cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug  # fetch JUCE into libs/juce
 #   cmake -S plugin/ui/testbed -B build-ui -DCMAKE_BUILD_TYPE=Debug
-#   cmake --build build-ui -j
+#   cmake --build build-ui -j4
 #   build-ui/UiTestbed_artefacts/Debug/UiTestbed.app/Contents/MacOS/UiTestbed --capture out
 #
 # Also reachable from the plugin build with -DT3K_BUILD_UI_TESTBED=ON, which
 # registers `UiTestbed --selftest` with ctest next to the DSP suite.
 cmake_minimum_required(VERSION 3.22)
 project(UiTestbed VERSION 1.0 LANGUAGES C CXX)
+
+option(T3K_TOUCH_UI "Enlarge chrome controls for coarse-pointer touch builds (7\" kiosk)" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -57,6 +59,10 @@ target_compile_definitions(UiTestbed PRIVATE
     JUCE_APPLICATION_VERSION_STRING="1.0"
     T3K_TESTBED_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
 )
+
+if (T3K_TOUCH_UI)
+    target_compile_definitions(UiTestbed PRIVATE T3K_UI_COARSE_POINTER=1)
+endif()
 
 target_link_libraries(UiTestbed PRIVATE
     juce::juce_gui_extra

@@ -1,5 +1,5 @@
 # Maintainer utilities. Not built by default and never shipped:
-#   cmake --build build --target PresetTool
+#   cmake --build build --target PresetTool -j4
 #   build/tools/PresetTool_artefacts/Release/PresetTool migrate resources/factory-presets
 juce_add_console_app(PresetTool PRODUCT_NAME "PresetTool")
 set_target_properties(PresetTool PROPERTIES EXCLUDE_FROM_ALL TRUE)

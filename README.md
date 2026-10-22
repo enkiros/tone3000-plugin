@@ -101,9 +101,13 @@ needs registering in TONE3000 > Settings > API Keys.
 
 ### 4. Build the plugin
 
+Build commands use **4 cores** (`-j4`) by default to keep compile time reasonable on typical dev machines:
+
 ```sh
-cmake --build build
+cmake --build build -j4
 ```
+
+The first build is long on 4 GB RAM / 4 core systems; drop to `-j2` if linking fails.
 
 ### 5. Run it
 

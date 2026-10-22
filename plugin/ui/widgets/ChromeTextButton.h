@@ -26,9 +26,6 @@ public:
   void paintButton(juce::Graphics& g, bool highlighted, bool down) override;
 
 private:
-  static constexpr float kFontPx = 12;
-  static constexpr int kPadX = 4;
-
   juce::String label_;
   bool armed_ = false, open_ = false;
 };

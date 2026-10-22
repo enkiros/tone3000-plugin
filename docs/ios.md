@@ -20,11 +20,11 @@ README); CMake reads it at configure time.
 ```sh
 # Simulator
 cmake --preset ios-simulator
-cmake --build build-ios --config Release --target TONE3000_Standalone -- -sdk iphonesimulator
+cmake --build build-ios --config Release --target TONE3000_Standalone -j4 -- -sdk iphonesimulator
 
 # Device
 cmake --preset ios-device
-cmake --build build-ios-device --config Release --target TONE3000_Standalone -- \
+cmake --build build-ios-device --config Release --target TONE3000_Standalone -j4 -- \
   -sdk iphoneos -allowProvisioningUpdates
 ```
 

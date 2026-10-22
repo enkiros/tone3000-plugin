@@ -5,16 +5,29 @@
 
 #include <juce_graphics/juce_graphics.h>
 
+#include "Design.h"
+
 namespace t3k::ui::theme {
 
+// Coarse-pointer (touch) builds enlarge chrome controls to ~32px targets;
+// desktop keeps the compact 20px chrome.
+inline constexpr bool kTouch = design::kCoarsePointer;
+
 // Lucide / custom glyph size inside ICON_BOX_SIZE chrome boxes.
-inline constexpr int kIconSize = 14;
+inline constexpr int kIconSize = kTouch ? 22 : 14;
 // Square hit-target for icon buttons beside knobs and in card headers.
-inline constexpr int kIconBoxSize = 20;
+inline constexpr int kIconBoxSize = kTouch ? 32 : 20;
 // Corner radius for every icon/text chrome box.
-inline constexpr float kIconBoxRadius = 2.0f;
+inline constexpr float kIconBoxRadius = kTouch ? 4.0f : 2.0f;
 // Height for text chrome (EQ, PRE, LITE/FULL segments).
-inline constexpr int kTextBoxHeight = 20;
+inline constexpr int kTextBoxHeight = kTouch ? 32 : 20;
+
+// Text-chrome (EQ / PRE / segmented) font and side pad grow with the box.
+inline constexpr float kTextChromeFontPx = kTouch ? 16.0f : 12.0f;
+inline constexpr int kTextChromePadX = kTouch ? 6 : 4;
+
+// Block-card header must fit the taller chrome.
+inline constexpr int kCardHeaderHeight = kTouch ? 56 : 45;
 
 // The two knob footprints; every knob is one of these.
 inline constexpr int kKnobSizePrimary = 48;

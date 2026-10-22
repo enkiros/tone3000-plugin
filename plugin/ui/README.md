@@ -24,7 +24,7 @@ the repository root once to fetch JUCE into `libs/juce`:
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake -S plugin/ui/testbed -B build-ui -DCMAKE_BUILD_TYPE=Debug
-cmake --build build-ui -j
+cmake --build build-ui -j4
 UI=build-ui/UiTestbed_artefacts/Debug/UiTestbed.app/Contents/MacOS/UiTestbed   # macOS path
 
 $UI --scenario main-mono [--live]            # interactive window on one scenario (--live: moving signal)

@@ -43,13 +43,13 @@ private:
 };
 
 SegmentedText::Style SegmentedText::armed() {
-  return {theme::kBrandYellow, theme::kBlack, juce::Colours::transparentBlack, theme::kMuted, 12, std::nullopt,
-          theme::kIconBoxSize};
+  return {theme::kBrandYellow, theme::kBlack, juce::Colours::transparentBlack, theme::kMuted,
+          theme::kTextChromeFontPx, std::nullopt, theme::kIconBoxSize};
 }
 
 SegmentedText::Style SegmentedText::selection() {
-  return {juce::Colours::transparentBlack, theme::kWhite, juce::Colours::transparentBlack, theme::kMuted, 12,
-          std::nullopt, 0};
+  return {juce::Colours::transparentBlack, theme::kWhite, juce::Colours::transparentBlack, theme::kMuted,
+          theme::kTextChromeFontPx, std::nullopt, 0};
 }
 
 SegmentedText::SegmentedText(std::vector<Cell> cells, Style style) : style_(style) {
