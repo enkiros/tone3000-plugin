@@ -23,8 +23,8 @@ namespace t3k::ui {
 class PitchGroup : public juce::Component, public SecondaryPressTarget {
 public:
   // Knob + the plate's knob-to-companion gap + the power box, like Gate.
-  static constexpr int kWidth = theme::kKnobSizeSecondary + 10 + theme::kIconBoxSize;
-  static int height() { return Knob::heightFor(theme::kKnobSizeSecondary); }
+  static constexpr int kWidth = theme::kKnobSizeFaceSecondary + 10 + theme::kIconBoxSize;
+  static int height() { return Knob::heightFor(theme::kKnobSizeFaceSecondary); }
 
   explicit PitchGroup(Services& services);
   ~PitchGroup() override;

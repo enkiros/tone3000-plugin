@@ -26,7 +26,9 @@ tripwires.
   cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=cmake/linux-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
   ```
 - Format/target toggles: `-DHEADLESS=ON`, `-DBUILD_AAX=OFF`, `-DBUILD_LV2=OFF`,
-  `-DBUILD_CLAP=OFF`, `-DT3K_BUILD_UI_TESTBED=ON`.
+  `-DBUILD_CLAP=OFF`, `-DT3K_BUILD_UI_TESTBED=ON`. The Pi kiosk adds
+  `-DT3K_TOUCH_UI=ON` (enlarges knobs, chrome and the faceplate for coarse
+  pointers; `kPlateHeight` grows 108→120 and the main screen shrinks to match).
 - **On the Pi, build the standalone only:** `cmake --build build --target
   TONE3000_Standalone -j4` with the format toggles above; the first build is
   long on 4 GB RAM / 4 cores (drop to `-j2` if linking runs out of memory).

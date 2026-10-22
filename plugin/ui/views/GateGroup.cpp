@@ -9,12 +9,12 @@ namespace {
 // The plate's knob-to-companion gap (Faceplate's kGroupGap).
 constexpr int kGap = 10;
 // Chrome boxes in a bottom-aligned row sit on the secondary-knob centreline.
-constexpr int kChromeLift = theme::faceplateChromeLift(theme::kKnobSizeSecondary);
+constexpr int kChromeLift = theme::faceplateChromeLift(theme::kKnobSizeFaceSecondary);
 
 Knob::Options thresholdKnob() {
   Knob::Options o;
   o.label = "Gate";
-  o.size = theme::kKnobSizeSecondary;
+  o.size = theme::kKnobSizeFaceSecondary;
   o.thumb = Knob::Thumb::secondary;
   o.scale = &scales::gateDb();
   o.defaultValue = static_cast<float>(scales::gateDb().fromDisplay(-80));
@@ -65,9 +65,9 @@ void GateGroup::toggleDeck() {
 
 void GateGroup::resized() {
   const int baseline = getHeight() - Knob::kEditorOverflow;  // the label slot's bottom edge
-  dim_.setBounds(0, 0, theme::kKnobSizeSecondary, getHeight());
+  dim_.setBounds(0, 0, theme::kKnobSizeFaceSecondary, getHeight());
   threshold_.setTopLeftPosition(0, 0);
-  power_.setTopLeftPosition(theme::kKnobSizeSecondary + kGap,
+  power_.setTopLeftPosition(theme::kKnobSizeFaceSecondary + kGap,
                             baseline - theme::kIconBoxSize + kChromeLift);
 }
 

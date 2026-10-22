@@ -15,11 +15,12 @@ constexpr float kAlignOffsetDefault = 0.5f;
 
 constexpr int kRowGap = 10;
 // The advert stands as tall as the plate's primary knobs, centred on the
-// secondary-knob centreline (label + gap + radius above the baseline).
-constexpr int kAdvertHeight = theme::kKnobSizePrimary;
-constexpr int kSecondaryCentreY = theme::kKnobLabelGap + 14 + theme::kKnobSizeSecondary / 2;
+// secondary-knob centreline (label + gap + radius above the baseline; 19 ==
+// Knob::kLabelSlot).
+constexpr int kAdvertHeight = theme::kKnobSizeFacePrimary;
+constexpr int kSecondaryCentreY = theme::kKnobLabelGap + 19 + theme::kKnobSizeFaceSecondary / 2;
 // Chrome boxes in a bottom-aligned row sit on that same centreline.
-constexpr int kChromeLift = theme::faceplateChromeLift(theme::kKnobSizeSecondary);
+constexpr int kChromeLift = theme::faceplateChromeLift(theme::kKnobSizeFaceSecondary);
 // Arrow glyph: a 24x10 viewBox drawn into a 20x7 box (uniform fit).
 constexpr float kArrowW = 20.0f, kArrowH = 7.0f, kArrowGap = 8.0f;
 
@@ -39,7 +40,7 @@ constexpr Copy copyFor(ImageFeature f) {
 Knob::Options offsetKnob(const Copy& copy) {
   Knob::Options o;
   o.label = "Offset";
-  o.size = theme::kKnobSizePrimary;
+  o.size = theme::kKnobSizeFacePrimary;
   o.variant = Knob::Variant::bipolar;
   o.scale = &scales::offsetMs();
   o.defaultValue = copy.offsetDefault;

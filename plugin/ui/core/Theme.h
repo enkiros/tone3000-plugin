@@ -29,9 +29,17 @@ inline constexpr int kTextChromePadX = kTouch ? 6 : 4;
 // Block-card header must fit the taller chrome.
 inline constexpr int kCardHeaderHeight = kTouch ? 56 : 45;
 
-// The two knob footprints; every knob is one of these.
+// The two knob footprints; every knob is one of these. Deck popovers and the
+// pan rail keep these compact sizes (their fixed panels are sized to them);
+// the faceplate uses the enlarged touch footprints below instead.
 inline constexpr int kKnobSizePrimary = 48;
 inline constexpr int kKnobSizeSecondary = 36;
+
+// Faceplate knob footprints. Touch builds enlarge these for the 7" kiosk
+// display and the faceplate grows to match (Design.h kPlateHeight); the deck
+// popovers and the pan rail keep the compact sizes above.
+inline constexpr int kKnobSizeFacePrimary = kTouch ? 60 : 48;
+inline constexpr int kKnobSizeFaceSecondary = kTouch ? 45 : 36;
 
 // The one dim applied to every disabled/off control (`.ui-off`).
 inline constexpr float kDisabledOpacity = 0.45f;
@@ -40,9 +48,10 @@ inline constexpr float kDisabledOpacity = 0.45f;
 inline constexpr int kKnobLabelGap = 8;
 
 // Vertical lift for a chrome icon box in a bottom-aligned faceplate row: from
-// the label baseline up to the centre of a secondary knob.
+// the label baseline up to the centre of a secondary knob. (19 == Knob::kLabelSlot,
+// the label-slot height the knob column reserves above the baseline.)
 inline constexpr int faceplateChromeLift(int secondaryKnobSize) {
-  return -(kKnobLabelGap + 14 + secondaryKnobSize / 2 - kIconBoxSize / 2);
+  return -(kKnobLabelGap + 19 + secondaryKnobSize / 2 - kIconBoxSize / 2);
 }
 
 inline const juce::Colour kBrandBlue{0xff0000ff};

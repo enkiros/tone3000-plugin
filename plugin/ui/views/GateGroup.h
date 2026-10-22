@@ -19,9 +19,9 @@ namespace t3k::ui {
 class GateGroup : public juce::Component, public SecondaryPressTarget {
 public:
   // Knob + the plate's knob-to-companion gap + the power box.
-  static constexpr int kWidth = theme::kKnobSizeSecondary + 10 + theme::kIconBoxSize;
+  static constexpr int kWidth = theme::kKnobSizeFaceSecondary + 10 + theme::kIconBoxSize;
   // As tall as a secondary knob column (the plate bottom-aligns it).
-  static int height() { return Knob::heightFor(theme::kKnobSizeSecondary); }
+  static int height() { return Knob::heightFor(theme::kKnobSizeFaceSecondary); }
 
   explicit GateGroup(Services& services);
   ~GateGroup() override;

@@ -145,6 +145,7 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=cmake/linux-toolchain.cmake \
             -DBUILD_AAX=OFF \
             -DT3K_BUILD_UI_TESTBED=ON \
+            -DT3K_TOUCH_UI=ON \
             -DCMAKE_C_COMPILER_LAUNCHER=sccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
