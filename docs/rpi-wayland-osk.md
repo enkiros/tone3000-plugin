@@ -49,7 +49,47 @@ cmake --build build --target TONE3000_Standalone -j4
 # binary: build/plugin/TONE3000_artefacts/RelWithDebInfo/Standalone/TONE3000
 ```
 
+## Install from the release tarball
+
+The Linux release tarball ships `install.sh` plus the kiosk supervisor
+(`tone3000-autostart`). `--kiosk` is opt-in:
+
+```sh
+tar -xzf TONE3000-v*-linux-aarch64.tar.gz
+cd TONE3000-v*-linux-aarch64
+./install.sh --kiosk
+```
+
+Besides the plugin formats and the standalone app, this:
+
+- installs `~/.local/bin/tone3000-autostart`;
+- adds a marked block to `~/.config/labwc/autostart` that runs it (creating
+  the file if needed; an existing line is left alone, so re-running is safe);
+- merges `<windowRules>` for `identifier="TONE3000"` (undecorated +
+  maximized) and a touchscreen fallback into `~/.config/labwc/rc.xml`.
+  If you have no `rc.xml`, it is seeded from `/etc/xdg/labwc/rc.xml` so the
+  RPiOS theme and keybinds survive.
+
+The launcher waits for the MOTU M2 card (`T3K_AUDIO_DEVICE` overrides the
+name; set it empty to skip the wait), exports `T3K_OSK_HEIGHT=220`, and
+restarts the app only after a crash. Logs live in
+`~/.local/state/tone3000/` (`autostart.log`, `app.out`).
+
+A touchscreen the distro config does not know about can be pinned while
+installing:
+
+```sh
+T3K_TOUCH_DEVICE="wch.cn USB2IIC_CTP_CONTROL (USB 3-2)" \
+T3K_TOUCH_OUTPUT=HDMI-A-1 ./install.sh --kiosk
+```
+
+Log out and back in after installing so labwc runs the new autostart.
+`./install.sh --uninstall` removes the launcher and the marked kiosk blocks.
+
 ## Run (from an SSH shell, or a session launcher)
+
+The installed `tone3000-autostart` supervisor is the supported way to launch
+the kiosk (see above); this manual invocation is for debugging.
 
 ```sh
 export XDG_RUNTIME_DIR=/run/user/1000

@@ -3,8 +3,15 @@
 #
 # Installs from the extracted tarball (run from inside the extracted folder):
 #   ./install.sh              install VST3 + LV2 + CLAP + standalone for the current user
+#   ./install.sh --kiosk      also start the standalone at labwc login (Raspberry Pi kiosk)
 #   ./install.sh --check      only check runtime dependencies, install nothing
 #   ./install.sh --uninstall  remove a previous install
+#
+# --kiosk writes ~/.config/labwc/autostart and merges window rules into
+# ~/.config/labwc/rc.xml (seeded from /etc/xdg/labwc/rc.xml when absent).
+#   T3K_TOUCH_DEVICE / T3K_TOUCH_OUTPUT  pin the touchscreen and output
+#                                        (default: all devices, all outputs)
+# The installed launcher reads T3K_AUDIO_DEVICE (default "MOTU M2") at run time.
 #
 # Install locations (override with env vars):
 #   VST3_DIR  VST3 plug-in dir   (default: ~/.vst3, the standard per-user location)
@@ -31,6 +38,11 @@ DATA_DIR="${DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}}"
 # Same root PresetManager uses for user presets on Linux (~/.config/TONE3000).
 CONFIG_DIR="${CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/TONE3000}"
 FACTORY_DIR="$CONFIG_DIR/Presets/Factory"
+LABWC_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/labwc"
+LABWC_AUTOSTART="$LABWC_CONFIG_DIR/autostart"
+LABWC_RCXML="$LABWC_CONFIG_DIR/rc.xml"
+SYSTEM_RCXML="/etc/xdg/labwc/rc.xml"
+AUTOSTART_NAME="tone3000-autostart"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 # Runtime dependency handling
@@ -190,13 +202,185 @@ check_linked_libs() {
   return 0
 }
 
+# Kiosk mode (--kiosk): labwc autostart + window rules for the Pi kiosk.
+# Everything here is opt-in; a plain ./install.sh leaves the session alone.
+
+autostart_configured() {
+  [[ -f "$LABWC_AUTOSTART" ]] && grep -q "$AUTOSTART_NAME" "$LABWC_AUTOSTART"
+}
+
+configure_autostart() {
+  mkdir -p "$LABWC_CONFIG_DIR"
+  if autostart_configured; then
+    echo "  labwc autostart: already configured ($LABWC_AUTOSTART)"
+    return 0
+  fi
+  {
+    echo ""
+    echo "# >>> TONE3000 kiosk autostart >>>"
+    printf '"%s" &\n' "$BIN_DIR/$AUTOSTART_NAME"
+    echo "# <<< TONE3000 kiosk autostart <<<"
+  } >>"$LABWC_AUTOSTART"
+  echo "  labwc autostart: $LABWC_AUTOSTART"
+}
+
+# Start from the distro config when the user has none, so --kiosk adds the
+# TONE3000 rules instead of replacing the RPiOS theme and keybinds.
+seed_rcxml() {
+  mkdir -p "$LABWC_CONFIG_DIR"
+  [[ -f "$LABWC_RCXML" ]] && return 0
+  if [[ -f "$SYSTEM_RCXML" ]]; then
+    cp "$SYSTEM_RCXML" "$LABWC_RCXML"
+  else
+    printf '%s\n' \
+      '<?xml version="1.0" encoding="UTF-8"?>' \
+      '<labwc_config>' \
+      '</labwc_config>' >"$LABWC_RCXML"
+  fi
+}
+
+# The generic <touch> fallback enables mouse emulation for any touchscreen
+# labwc has no specific rule for. The env vars pin a device/output when a
+# kiosk uses a panel the distro config does not know about.
+touch_element() {
+  if [[ -n "${T3K_TOUCH_DEVICE:-}" || -n "${T3K_TOUCH_OUTPUT:-}" ]]; then
+    local element="<touch"
+    [[ -n "${T3K_TOUCH_DEVICE:-}" ]] && element+=" deviceName=\"$T3K_TOUCH_DEVICE\""
+    [[ -n "${T3K_TOUCH_OUTPUT:-}" ]] && element+=" mapToOutput=\"$T3K_TOUCH_OUTPUT\""
+    echo "$element mouseEmulation=\"yes\" />"
+  else
+    echo '<touch deviceName="" mouseEmulation="yes" />'
+  fi
+}
+
+configure_rcxml() {
+  seed_rcxml
+
+  local add_rules=1 add_touch=1
+  grep -q 'identifier="TONE3000"' "$LABWC_RCXML" && add_rules=0
+  grep -q 'deviceName=""' "$LABWC_RCXML" && add_touch=0
+  if [[ "$add_rules" -eq 0 && "$add_touch" -eq 0 ]]; then
+    echo "  labwc window rules: already configured ($LABWC_RCXML)"
+    return 0
+  fi
+
+  local touch_line tmp
+  touch_line="$(touch_element)"
+  tmp="$(mktemp)"
+  awk -v add_rules="$add_rules" -v add_touch="$add_touch" -v touch_line="$touch_line" '
+    function touch_block() {
+      print "  <!-- >>> TONE3000 kiosk touch >>> -->"
+      print "  " touch_line
+      print "  <!-- <<< TONE3000 kiosk touch <<< -->"
+    }
+    function rules_block() {
+      print "    <!-- >>> TONE3000 kiosk window rules >>> -->"
+      print "    <windowRule identifier=\"TONE3000\" serverDecoration=\"no\" />"
+      print "    <windowRule identifier=\"TONE3000\">"
+      print "      <action name=\"Maximize\" direction=\"both\" />"
+      print "    </windowRule>"
+      print "    <!-- <<< TONE3000 kiosk window rules <<< -->"
+    }
+    {
+      line = $0
+      # Touch is a sibling of windowRules, never a child, so insert it at the
+      # first windowRules line and leave the rules block for the opening tag.
+      if (add_touch == 1 && line ~ /<windowRules/) {
+        touch_block()
+        add_touch = 0
+      }
+      if (line ~ /<windowRules[[:space:]]*\/>/) {
+        print "  <windowRules>"
+        if (add_rules == 1) { rules_block(); add_rules = 0 }
+        print "  </windowRules>"
+        next
+      }
+      if (line ~ /<windowRules([[:space:]>])/) {
+        print
+        if (add_rules == 1) { rules_block(); add_rules = 0 }
+        next
+      }
+      if (line ~ /<\/(openbox_config|labwc_config)>/) {
+        if (add_touch == 1) { touch_block(); add_touch = 0 }
+        if (add_rules == 1) {
+          print "  <windowRules>"
+          rules_block()
+          print "  </windowRules>"
+          add_rules = 0
+        }
+        print
+        next
+      }
+      print
+    }
+  ' "$LABWC_RCXML" >"$tmp"
+  mv "$tmp" "$LABWC_RCXML"
+  echo "  labwc window rules: $LABWC_RCXML"
+}
+
+remove_autostart() {
+  [[ -f "$LABWC_AUTOSTART" ]] || return 0
+  local tmp
+  tmp="$(mktemp)"
+  awk '
+    /^# >>> TONE3000 kiosk autostart >>>$/ { skip = 1; next }
+    skip && /^# <<< TONE3000 kiosk autostart <<<$/ { skip = 0; next }
+    skip { next }
+    /tone3000-autostart/ { next }
+    { print }
+  ' "$LABWC_AUTOSTART" >"$tmp"
+  if grep -q '[^[:space:]]' "$tmp"; then
+    mv "$tmp" "$LABWC_AUTOSTART"
+  else
+    rm -f "$tmp" "$LABWC_AUTOSTART"
+  fi
+}
+
+remove_rcxml() {
+  [[ -f "$LABWC_RCXML" ]] || return 0
+  local tmp
+  tmp="$(mktemp)"
+  awk '
+    /<!-- >>> TONE3000 kiosk touch >>> -->/ { skip = 1; next }
+    skip && /<!-- <<< TONE3000 kiosk touch <<< -->/ { skip = 0; next }
+    /<!-- >>> TONE3000 kiosk window rules >>> -->/ { skip = 1; next }
+    skip && /<!-- <<< TONE3000 kiosk window rules <<< -->/ { skip = 0; next }
+    skip { next }
+    { print }
+  ' "$LABWC_RCXML" >"$tmp"
+  # If the file was only a copy of the distro config plus our block, delete it
+  # so labwc follows the system config again.
+  if [[ -f "$SYSTEM_RCXML" ]] && cmp -s "$tmp" "$SYSTEM_RCXML"; then
+    rm -f "$tmp" "$LABWC_RCXML"
+  else
+    mv "$tmp" "$LABWC_RCXML"
+  fi
+}
+
 # Main
 
-if [[ "${1:-}" == "--uninstall" ]]; then
+MODE="install"
+KIOSK=0
+case "${1:-}" in
+  --uninstall) MODE="uninstall" ;;
+  --check)     MODE="check" ;;
+  --kiosk)     KIOSK=1 ;;
+  "")          ;;
+  *)
+    echo "Error: unknown option '$1'" >&2
+    echo "Usage: ./install.sh [--kiosk] | --check | --uninstall" >&2
+    exit 2
+    ;;
+esac
+
+if [[ "$MODE" == "uninstall" ]]; then
   rm -rf "$VST3_DIR/TONE3000.vst3"
   rm -rf "$LV2_DIR/TONE3000.lv2"
   rm -f "$CLAP_DIR/TONE3000.clap"
   rm -f "$BIN_DIR/TONE3000"
+  rm -f "$BIN_DIR/$AUTOSTART_NAME"
+  remove_autostart
+  remove_rcxml
   rm -f "$DATA_DIR/applications/tone3000.desktop"
   rm -f "$DATA_DIR/icons/hicolor/512x512/apps/tone3000.png"
   # Remove only the factory presets this tarball shipped (matched by stem),
@@ -213,7 +397,7 @@ if [[ "${1:-}" == "--uninstall" ]]; then
   exit 0
 fi
 
-if [[ "${1:-}" == "--check" ]]; then
+if [[ "$MODE" == "check" ]]; then
   status=0
   check_and_install_deps || status=1
   [[ -f "$HERE/TONE3000" ]] && { check_linked_libs || status=1; }
@@ -225,6 +409,11 @@ if [[ ! -d "$HERE/TONE3000.vst3" || ! -d "$HERE/TONE3000.lv2" ||
   echo "Error: TONE3000.vst3, TONE3000.lv2, TONE3000.clap and/or TONE3000 not"
   echo "found next to this script. Run install.sh from inside the extracted"
   echo "release folder."
+  exit 1
+fi
+
+if [[ "$KIOSK" -eq 1 && ! -f "$HERE/$AUTOSTART_NAME" ]]; then
+  echo "Error: --kiosk needs $AUTOSTART_NAME next to this script." >&2
   exit 1
 fi
 
@@ -251,6 +440,11 @@ install -m 644 "$HERE/TONE3000.clap" "$CLAP_DIR/TONE3000.clap"
 echo "Installing standalone app to $BIN_DIR ..."
 mkdir -p "$BIN_DIR"
 install -m 755 "$HERE/TONE3000" "$BIN_DIR/TONE3000"
+
+if [[ -f "$HERE/$AUTOSTART_NAME" ]]; then
+  echo "Installing kiosk launcher to $BIN_DIR ..."
+  install -m 755 "$HERE/$AUTOSTART_NAME" "$BIN_DIR/$AUTOSTART_NAME"
+fi
 
 if compgen -G "${HERE}/factory-presets/*.t3kpreset" > /dev/null; then
   echo "Installing factory presets to $FACTORY_DIR ..."
@@ -283,14 +477,31 @@ EOF
 command -v update-desktop-database >/dev/null &&
   update-desktop-database "$DATA_DIR/applications" 2>/dev/null || true
 
+if [[ "$KIOSK" -eq 1 ]]; then
+  echo ""
+  echo "Configuring the labwc kiosk session ..."
+  configure_autostart
+  configure_rcxml
+fi
+
 echo ""
 echo "Done."
 echo "  VST3:       $VST3_DIR/TONE3000.vst3 (rescan plug-ins in your DAW)"
 echo "  LV2:        $LV2_DIR/TONE3000.lv2"
 echo "  CLAP:       $CLAP_DIR/TONE3000.clap"
 echo "  Standalone: $BIN_DIR/TONE3000 (desktop entry: applications menu > TONE3000)"
+if [[ -f "$BIN_DIR/$AUTOSTART_NAME" ]]; then
+  echo "  Launcher:   $BIN_DIR/$AUTOSTART_NAME"
+fi
 if [[ -d "$FACTORY_DIR" ]] && compgen -G "${FACTORY_DIR}/*.t3kpreset" > /dev/null; then
   echo "  Presets:    $FACTORY_DIR"
+fi
+if [[ "$KIOSK" -eq 1 ]]; then
+  echo "  Kiosk:      starts at labwc login (log: ~/.local/state/tone3000/autostart.log)"
+else
+  echo ""
+  echo "Tip: './install.sh --kiosk' starts TONE3000 automatically at labwc login"
+  echo "(Raspberry Pi kiosk; see README.txt)."
 fi
 if ! echo ":$PATH:" | grep -q ":$BIN_DIR:"; then
   echo ""

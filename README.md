@@ -197,6 +197,11 @@ the window — so OSK integration is standalone-only.
   unchanged.
 - **squeekboard must be running before a field asks for input.** Raspberry Pi
   OS's Control Centre enables it and writes the autostart entry.
+- **Kiosk install.** The Linux release tarball's `./install.sh --kiosk`
+  installs `tone3000-autostart` and wires it into labwc, so the panel boots
+  into the standalone app. It also merges the undecorated/maximized window
+  rules and a touchscreen fallback into `~/.config/labwc/rc.xml`. Plain
+  `./install.sh` leaves the desktop session untouched.
 
 Build/run/verify notes and the Pi 5 setup:
 [`docs/rpi-wayland-osk.md`](docs/rpi-wayland-osk.md).
