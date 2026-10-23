@@ -189,7 +189,17 @@ jobs:
             cp resources/factory-presets/*.t3kpreset "$STAGE/factory-presets/"
           fi
           tar -czf "build/${PKG}.tar.gz" -C build "$PKG"
-          tar -tzf "build/${PKG}.tar.gz" | grep -qx "$PKG/tone3000-autostart"
+          # Not `tar ... | grep -q`: grep -q exits on the first match, which
+          # SIGPIPEs a still-listing GNU tar ("tar: stdout: write error"), and
+          # pipefail then fails the step even though the entry was found. Same
+          # hazard the ldconfig snapshot in
+          # script/installer/linux/install.sh works around; capture the listing
+          # once and match in-shell so there is no pipe to break.
+          TAR_LIST="$(tar -tzf "build/${PKG}.tar.gz")"
+          case "$TAR_LIST" in
+            *"$PKG/tone3000-autostart"*) ;;
+            *) echo "missing $PKG/tone3000-autostart in tarball" >&2; exit 1 ;;
+          esac
           echo "Created build/${PKG}.tar.gz"
 
       - name: Upload artifacts (Linux)
