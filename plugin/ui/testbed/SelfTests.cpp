@@ -21,6 +21,7 @@
 #include "core/Help.h"
 #include "core/KnobScale.h"
 #include "core/Labels.h"
+#include "core/LinuxBackend.h"
 #include "core/Pitch.h"
 #include "core/RichText.h"
 #include "core/TextFlow.h"
@@ -81,6 +82,37 @@ struct HtmlTests : juce::UnitTest {
     beginTest("unknown tags drop, entities decode");
     expectEquals(flat(Html::toRichText("<script>x</script><span>a &amp; b &lt;c&gt;</span>")),
                  juce::String("xa & b <c>|"));
+  }
+};
+
+// core/LinuxBackend.h: the pre-main guard that keeps the kiosk on Wayland,
+// where the compositor keyboard has a text-input protocol to drive.
+struct LinuxBackendTests : juce::UnitTest {
+  LinuxBackendTests() : juce::UnitTest("LinuxBackend", "ui") {}
+  void runTest() override {
+    const auto none = [](const juce::String&) { return false; };
+    const auto only = [](const char* socket) {
+      return [socket](const juce::String& path) { return path == socket; };
+    };
+    const juce::String runtimeDir("/run/user/1000");
+
+    beginTest("an explicit WAYLAND_DISPLAY is never overridden");
+    expectEquals(linuxbackend::discoverWaylandDisplay("wayland-7", runtimeDir, none), juce::String("wayland-7"));
+    expectEquals(linuxbackend::discoverWaylandDisplay("/tmp/nested-wayland", runtimeDir, none),
+                 juce::String("/tmp/nested-wayland"));
+
+    beginTest("probes wayland-0..2 in XDG_RUNTIME_DIR");
+    expectEquals(linuxbackend::discoverWaylandDisplay(juce::String(), runtimeDir, only("/run/user/1000/wayland-0")),
+                 juce::String("wayland-0"));
+    expectEquals(linuxbackend::discoverWaylandDisplay(juce::String(), runtimeDir, only("/run/user/1000/wayland-1")),
+                 juce::String("wayland-1"));
+    expectEquals(linuxbackend::discoverWaylandDisplay(juce::String(), runtimeDir, only("/run/user/1000/wayland-3")),
+                 juce::String(), "wayland-3 is outside the probe window");
+
+    beginTest("no session means no selection");
+    expectEquals(linuxbackend::discoverWaylandDisplay(juce::String(), {}, only("/run/user/1000/wayland-0")),
+                 juce::String());
+    expectEquals(linuxbackend::discoverWaylandDisplay(juce::String(), runtimeDir, none), juce::String());
   }
 };
 
@@ -2629,6 +2661,7 @@ struct FaceplateDualMonoTests : juce::UnitTest {
 HtmlTests htmlTests;
 FontTests fontTests;
 RichFlowTests richFlowTests;
+LinuxBackendTests linuxBackendTests;
 AccessibilityTests accessibilityTests;
 FocusPolicyTests focusPolicyTests;
 SettingsKeyboardTests settingsKeyboardTests;

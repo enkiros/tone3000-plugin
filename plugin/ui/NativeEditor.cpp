@@ -1,6 +1,7 @@
 #include "NativeEditor.h"
 
 #include "core/Fonts.h"
+#include "core/LinuxBackend.h"
 
 namespace t3k::ui {
 
@@ -42,6 +43,18 @@ NativeEditor::Trace::Trace(const TONE3000Processor& processor) {
   }
   line << " | displays " << displays.displays.size()
        << " | globalScale " << formatScale(juce::Desktop::getInstance().getGlobalScaleFactor());
+#if JUCE_LINUX || JUCE_BSD
+  // The backend decides whether the compositor's on-screen keyboard exists at
+  // all, and an X11 fallback is otherwise invisible (the window still opens,
+  // through XWayland). Record it next to the display for bug reports; plugin
+  // windows are X11-only by design, so only the standalone is interesting.
+  if (processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone) {
+    const bool wayland = linuxbackend::usingWaylandDisplay();
+    const auto waylandDisplay = juce::SystemStats::getEnvironmentVariable("WAYLAND_DISPLAY", {});
+    line << " | backend " << (wayland ? "wayland" : "X11")
+         << " (WAYLAND_DISPLAY=" << (waylandDisplay.isEmpty() ? "<unset>" : waylandDisplay) << ")";
+  }
+#endif
   trace(line);
 }
 
@@ -112,6 +125,18 @@ NativeEditor::NativeEditor(TONE3000Processor& owner)
   // Separates a crash inside PluginRoot's construction (log stops at "Fonts
   // ready") from one in the host's window attach (stops here).
   trace("Constructed: " + juce::String(getWidth()) + "x" + juce::String(getHeight()));
+
+#if defined(T3K_UI_COARSE_POINTER) && (JUCE_LINUX || JUCE_BSD)
+  // The kiosk is unusable without the compositor keyboard. If the pre-main
+  // guard in core/LinuxBackend.cpp could not secure Wayland, say so in the log
+  // and on screen instead of leaving a silently keyboard-less UI.
+  if (processor_.wrapperType == juce::AudioProcessor::wrapperType_Standalone &&
+      !linuxbackend::usingWaylandDisplay()) {
+    trace("warning: X11 backend; the on-screen keyboard needs Wayland "
+          "(WAYLAND_DISPLAY unset or its socket missing)");
+    services_.toast.show("No on-screen keyboard: running on X11");
+  }
+#endif
 }
 
 NativeEditor::~NativeEditor() { stopTimer(); }

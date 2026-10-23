@@ -57,6 +57,14 @@ anchors in `CMakeLists.txt`; do not "fix" the tree by editing `libs/juce`.
 - **Backend selection is JUCE's.** `shouldUseWaylandBackend()` picks Wayland
   only for standalone apps with `WAYLAND_DISPLAY` set; plugin windows stay on
   X11/XWayland. Don't add a parallel Wayland plugin path.
+- **No silent X11 fallback.** JUCE's X11 path defaults `DISPLAY` to `:0.0`, so
+  a standalone started from a bare SSH shell lands on XWayland while labwc is
+  running — and X11 has no text-input protocol, so squeekboard never appears.
+  Kiosk builds fill `WAYLAND_DISPLAY` in from `$XDG_RUNTIME_DIR` in a
+  pre-`main` initialiser (`plugin/ui/core/LinuxBackend.cpp`) and log
+  `backend wayland|X11`. Keep that hook ahead of JUCE's display init; moving it
+  into the editor constructor is too late (its first member already queries the
+  displays).
 - **OSK = compositor text-input, not an in-app keyboard.** The standalone
   binds `zwp_text_input_manager_v3`; labwc forwards it to squeekboard
   (input-method-v2). The abandoned in-app `VirtualKeyboard` (commit `44310c7`)

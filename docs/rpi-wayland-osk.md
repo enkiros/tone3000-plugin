@@ -9,6 +9,12 @@ covers building, launching, and verifying that on a Raspberry Pi 5 kiosk.
 
 - The standalone app uses JUCE's Wayland backend when `WAYLAND_DISPLAY` is
   set (plugin windows stay on X11/XWayland by JUCE design — no OSK there).
+- Kiosk builds fill `WAYLAND_DISPLAY` in from `$XDG_RUNTIME_DIR/wayland-N`
+  when it is unset, before JUCE opens a display
+  (`plugin/ui/core/LinuxBackend.cpp`). The editor's `Constructing:` log line
+  records `backend wayland|X11 (WAYLAND_DISPLAY=…)`; if the guard cannot
+  secure Wayland the app logs a warning and shows a "No on-screen keyboard"
+  toast.
 - Focusing any text field enables `zwp_text_input_v3`; labwc forwards the
   request to squeekboard (input-method-v2), which shows the keyboard. Tapping
   keys commits text back through the same surface.
@@ -86,5 +92,7 @@ keyboard's top edge, ~395 on the 1024×600 panel), `commit_string` per key,
   `zwp_text_input_manager_v3` is bound and `enable` is sent.
 - **Field hidden behind the keyboard.** Raise `T3K_OSK_HEIGHT` (the value is
   the occluded band); the field scrolls up further on focus.
-- **Falls back to X11.** `WAYLAND_DISPLAY` must be set *and* the app must be
-  the standalone target (plugin formats are X11-only by design).
+- **Falls back to X11.** `WAYLAND_DISPLAY` must name a live socket *and* the
+  app must be the standalone target (plugin formats are X11-only by design).
+  Kiosk builds auto-select the display and log `backend X11` plus a toast when
+  that failed; look for the `[Startup] WAYLAND_DISPLAY=…` line on stderr.
