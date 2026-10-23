@@ -71,6 +71,31 @@ anchors in `CMakeLists.txt`; do not "fix" the tree by editing `libs/juce`.
   `grim` for screenshots. Full guide:
   [`docs/rpi-wayland-osk.md`](docs/rpi-wayland-osk.md).
 
+## IR convolution (reverb tails)
+
+- **Long IRs must use `IrConvolver`, not `juce::dsp::Convolution` directly.**
+  `NonUniform{8192}` computes the whole reverb tail as one FFT batch every 8192
+  samples (~170 ms). That batch (~2×tail-length complex MACs) misses the
+  callback deadline at 64/128-sample host blocks (it fits 256), so long/plate
+  reverbs popped; short cab IRs were unaffected.
+- `plugin/include/IrConvolver.h` splits the kernel exactly: the first
+  `kIrHeadSamples` (8192) stay on the audio thread as a zero-latency
+  `juce::dsp::Convolution`; the rest (`NonUniform{8192}`) runs on a worker in
+  `kIrTailBlockSamples` (1024) blocks and is added exactly 8192 samples later,
+  where the head ends. Same convolution, zero added latency, no truncation.
+  Short (cab) IRs keep a single engine and spawn no worker.
+- **Don't move the tail back onto the audio thread** to "simplify" — that
+  reintroduces the spike. The worker has ~150 ms of slack and costs a few % of
+  a core; `process()` has a bounded wait so fast-driven renders (tests/offline)
+  still produce the full tail.
+- **`Stereo::no` is not a fan-out.** JUCE applies the mono kernel to *each*
+  input channel independently, so the tail worker must copy/add every channel.
+  Channel-0-only leaks the left take into the right and breaks dual mono's
+  silent-take contract.
+- Long/short is decided from the **trimmed** length (1 s = 48000 base
+  samples); keep `kShortIrMaxBaseSamples` (loader) and
+  `kIrShortMaxBaseSamples` (`IrConvolver.cpp`) in sync.
+
 ## Tests
 
 - DSP suite: `./script/test-dsp.sh ['GtestFilter*']` — builds the `DspTests`

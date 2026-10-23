@@ -323,6 +323,8 @@ target_sources(${PROJECT_NAME}
         include/BlockSpectrum.h
         src/BlockSpectrum.cpp
         include/ChainBlock.h
+        include/IrConvolver.h
+        src/IrConvolver.cpp
         include/ChainHistory.h
         include/ImageDeck.h
         include/Spread.h

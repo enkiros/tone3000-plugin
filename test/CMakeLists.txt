@@ -29,6 +29,7 @@ target_sources(DspTests PRIVATE
     src/host_program_tests.cpp
     src/ir_block_size_tests.cpp
     src/ir_classification_tests.cpp
+    src/ir_convolver_tests.cpp
     src/ir_temp_file_tests.cpp
     src/local_load_tests.cpp
     src/midi_map_tests.cpp
@@ -50,6 +51,7 @@ target_sources(DspTests PRIVATE
     ../plugin/src/AutoOffset.cpp
     ../plugin/src/BlockEq.cpp
     ../plugin/src/BlockSpectrum.cpp
+    ../plugin/src/IrConvolver.cpp
     ../plugin/src/LegacyParamIds.cpp
     ../plugin/src/MidiMapper.cpp
     ../plugin/src/NamEngine.cpp

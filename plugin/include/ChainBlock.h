@@ -10,6 +10,7 @@
 #include "BlockEq.h"
 #include "BlockSpectrum.h"
 #include "ChainOversampler.h"
+#include "IrConvolver.h"
 #include "NamEngine.h"
 
 // Chain block types
@@ -79,8 +80,10 @@ inline int irConvolverBlockSizeFor(int chainBaseBlockSize) noexcept {
 // of at most kIrConvolverMaxBlockSize frames. When the base block is at or
 // below the cap this is a single call (the island hands at most the base
 // block per callback); above it, the convolver was prepared at the cap and
-// the loop keeps every call within what it was prepared for.
-inline void processConvolverInChunks(juce::dsp::Convolution& convolver,
+// the loop keeps every call within what it was prepared for. Templated so it
+// works for both juce::dsp::Convolution (tests) and IrConvolver (the plugin).
+template <typename Convolver>
+inline void processConvolverInChunks(Convolver& convolver,
                                      const juce::dsp::AudioBlock<float>& block) {
   const size_t numSamples = block.getNumSamples();
   constexpr size_t chunkSize = static_cast<size_t>(kIrConvolverMaxBlockSize);
@@ -202,11 +205,12 @@ struct ChainBlock {
   //   every audio channel. Always present for a loaded IR; used as the mono fallback.
   // convolverStereo: IR loaded with Stereo::yes; audio ch0 ⊗ IR ch0, audio ch1 ⊗ IR ch1.
   //   Only created when the IR file actually has >= 2 channels (true stereo IR).
-  // The convolution engine is picked at load time by IR length: cab IRs use
-  // JUCE's uniform zero-latency engine, reverb-length IRs the two-stage
-  // non-uniform engine (also zero latency); see prepareBlockModelOffThread.
-  std::unique_ptr<juce::dsp::Convolution> convolverMono;
-  std::unique_ptr<juce::dsp::Convolution> convolverStereo;
+  // The engine is picked at load time by IR length: cab IRs use one
+  // zero-latency engine, reverb-length IRs split their tail onto a worker
+  // thread (IrConvolver) so the per-callback FFT batch never misses the
+  // deadline at small host blocks; see IrConvolver.h.
+  std::unique_ptr<IrConvolver> convolverMono;
+  std::unique_ptr<IrConvolver> convolverStereo;
   // Convolution always runs at kChainBaseSampleRate: when the chain is
   // oversampled this island decimates the block's wet path to the base rate
   // around the convolver and interpolates back (linear processing gains

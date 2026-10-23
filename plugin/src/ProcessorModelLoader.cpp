@@ -54,14 +54,10 @@ bool irIsLongFor(const juce::String& gear, bool longByLength) {
   return longByLength;
 }
 
-// Long IRs use JUCE's two-stage non-uniform engine (still zero latency):
-// the first kIrNonUniformHeadSamples convolve in partitions of the
-// convolver's prepared block size (irConvolverBlockSizeFor, ChainBlock.h),
-// the tail in partitions of this size, so per-callback CPU stops scaling
-// linearly with tail length. Bigger head = more per-callback FFT work;
-// smaller = chunkier tail batches. 8192 (~170 ms) is a conventional
-// reverb head size.
-constexpr int kIrNonUniformHeadSamples = 8192;
+// Long IRs split their convolution across two engines so a reverb's tail can't
+// force one callback past its deadline at small host blocks (see IrConvolver.h
+// for the head/tail split, the worker, and the exact boundary constants).
+
 
 // NAM phase-interleaved oversampling eligibility (see NamEngine.h).
 // Phase interleaving is exact only for architectures whose temporal structure
@@ -985,17 +981,11 @@ TONE3000Processor::PreparedBlockModel TONE3000Processor::prepareBlockModelOffThr
           static_cast<double>(fileSamplesToLoad) * kChainBaseSampleRate / fileSampleRate));
       const int irNumChannels = juce::jlimit(1, 2, static_cast<int>(reader->numChannels));
 
-      // Engine by the short/long cutoff. The engine must be constructed
-      // before the trimmed size is known, so this one decision uses the
-      // pre-trim upper bound; a silence-padded cab merely lands on the
-      // non-uniform engine, a CPU choice, not an audible one. All audible
-      // logic (output pad, default mix) uses the trimmed length below.
-      const bool engineLongIr = irLengthUpperBound > kShortIrMaxBaseSamples;
-      auto makeConvolver = [engineLongIr] {
-        return engineLongIr ? std::make_unique<juce::dsp::Convolution>(
-                                  juce::dsp::Convolution::NonUniform{kIrNonUniformHeadSamples})
-                            : std::make_unique<juce::dsp::Convolution>();
-      };
+      // Engine by the short/long cutoff. IrConvolver decides at load time from
+      // the trimmed kernel length (a silence-padded cab merely stays on the
+      // plain zero-latency engine, a CPU choice, not an audible one). All
+      // audible logic (output pad, default mix) uses the trimmed length below.
+      auto makeConvolver = [] { return std::make_unique<IrConvolver>(); };
 
       // IR convolution always runs at the base rate: when the chain is
       // oversampled, the block's island (ChainBlock::irBaseRateIsland) hands
@@ -1022,16 +1012,10 @@ TONE3000Processor::PreparedBlockModel TONE3000Processor::prepareBlockModelOffThr
       // the convolver until that window has provably elapsed: the install
       // and its crossfade happen here on the loader thread, and the engine
       // goes live deterministically full-wet with silent state.
-      auto elapseConvolverInstallFade = [&spec](juce::dsp::Convolution& convolver) {
-        const int chunk = static_cast<int>(spec.maximumBlockSize);
-        juce::AudioBuffer<float> silence(static_cast<int>(spec.numChannels), chunk);
-        silence.clear();
+      auto elapseConvolverInstallFade = [](IrConvolver& convolver) {
         // 3× JUCE's 0.05 s install fade: margin over exactness, it's cheap.
-        const int warmupSamples = static_cast<int>(kChainBaseSampleRate * 0.15);
-        for (int done = 0; done < warmupSamples; done += chunk) {
-          juce::dsp::AudioBlock<float> blockRef(silence);
-          convolver.process(juce::dsp::ProcessContextReplacing<float>(blockRef));
-        }
+        // warmUp() advances both the head and (for long IRs) the tail engine.
+        convolver.warmUp(0.15);
       };
 
       // Mono fallback convolver: IR channel 0 applied to every audio channel.
