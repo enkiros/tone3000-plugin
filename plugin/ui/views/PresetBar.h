@@ -11,6 +11,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
+#include "core/Theme.h"
 #include "services/Services.h"
 #include "widgets/IconButton.h"
 
@@ -21,9 +22,10 @@ class PresetBar : public juce::Component,
                   private ChainStore::Listener,
                   private UiPrefs::Listener {
 public:
-  static constexpr int kHeight = 36;
-  static constexpr int kPillWidth = 202;
-  static constexpr int kWidth = kPillWidth + 8 + 28 + 8 + 28;
+  static constexpr int kHeight = theme::kPresetPillHeight;
+  static constexpr int kPillWidth = theme::kPresetPillWidth;
+  static constexpr int kWidth =
+      kPillWidth + 8 + theme::kTopBarButtonSize + 8 + theme::kTopBarButtonSize;
 
   explicit PresetBar(Services& services);
   ~PresetBar() override;
@@ -61,8 +63,8 @@ private:
   Services& services_;
   std::unique_ptr<Chevron> prev_, next_;
   std::unique_ptr<NameButton> name_;
-  IconButton save_{Icon::Save, 28};
-  IconButton newButton_{Icon::Plus, 28};
+  IconButton save_{Icon::Save, theme::kTopBarButtonSize};
+  IconButton newButton_{Icon::Plus, theme::kTopBarButtonSize};
   std::unique_ptr<SavePanel> savePanel_;
   std::unique_ptr<BrowsePanel> browsePanel_;
 };

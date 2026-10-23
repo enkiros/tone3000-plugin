@@ -29,6 +29,22 @@ inline constexpr int kTextChromePadX = kTouch ? 6 : 4;
 // Block-card header must fit the taller chrome.
 inline constexpr int kCardHeaderHeight = kTouch ? 56 : 45;
 
+// Top-bar chrome (PluginHeader, PresetBar, StereoModeToggle). The bar keeps
+// its 64px height on touch builds (PluginHeader::kHeight), so the targets grow
+// inside it instead of pushing the main screen down. 40px is the finger-sized
+// box for the primary actions; desktop keeps the compact 28px box.
+inline constexpr int kTopBarButtonSize = kTouch ? 40 : 28;
+// Preset pill: the touch pill is taller and wider, the extra width paying for
+// ‹ / › hit zones a finger can hit (30px rather than 22px).
+inline constexpr int kPresetPillWidth = kTouch ? 230 : 202;
+inline constexpr int kPresetPillHeight = kTouch ? 40 : 36;
+inline constexpr int kPresetChevronWidth = kTouch ? 30 : 22;
+inline constexpr int kPresetChevronGlyph = kTouch ? 18 : 14;
+// Mono/stereo segmented pill; each segment is half the track, so the touch
+// segments are 40x40 hit targets.
+inline constexpr int kStereoToggleWidth = kTouch ? 88 : 80;
+inline constexpr int kStereoToggleHeight = kTouch ? 40 : 36;
+
 // The two knob footprints; every knob is one of these. Deck popovers and the
 // pan rail keep these compact sizes (their fixed panels are sized to them);
 // the faceplate uses the enlarged touch footprints below instead.

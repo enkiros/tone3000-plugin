@@ -9,6 +9,8 @@ IconButton::IconButton(Icon icon, int boxSize) : IconButton(icon, boxSize, glyph
 IconButton::IconButton(Icon icon, int boxSize, int glyphSize)
     : IconButton(icon, nullptr, boxSize, glyphSize) {}
 
+IconButton::IconButton(const char* svg, int boxSize) : IconButton(svg, boxSize, glyphSizeFor(boxSize)) {}
+
 IconButton::IconButton(const char* svg, int boxSize, int glyphSize)
     : IconButton(std::nullopt, svg, boxSize, glyphSize) {}
 

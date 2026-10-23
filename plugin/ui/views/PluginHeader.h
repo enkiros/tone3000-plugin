@@ -7,6 +7,7 @@
 #include "AccountMenu.h"
 #include "PresetBar.h"
 #include "StereoModeToggle.h"
+#include "core/Theme.h"
 #include "services/Services.h"
 #include "widgets/IconButton.h"
 
@@ -44,8 +45,8 @@ private:
   PresetBar presetBar_;
   StereoModeToggle stereo_;
   IconButton tuner_;
-  IconButton undo_{Icon::Undo2, 28};
-  IconButton redo_{Icon::Redo2, 28};
+  IconButton undo_{Icon::Undo2, theme::kTopBarButtonSize};
+  IconButton redo_{Icon::Redo2, theme::kTopBarButtonSize};
   AccountMenu account_;
   bool tunerShown_ = false;
 };

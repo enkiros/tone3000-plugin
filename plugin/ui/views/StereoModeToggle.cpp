@@ -10,12 +10,13 @@
 namespace t3k::ui {
 
 namespace {
-// The 36px highlight snaps to the selected side, inset 4px from the outer
-// edge; each segment is highlight-width so its icon centres under it.
+// The highlight snaps to the selected side, inset 4px from the outer edge;
+// each segment is highlight-width so its icon centres under it and takes the
+// whole segment (40x40 on touch) as its hit target.
 constexpr int kOuterInset = 4;
-constexpr int kHighlightWidth = 36;
-constexpr int kHighlightHeight = 28;
-constexpr int kGlyph = 12;
+constexpr int kHighlightWidth = StereoModeToggle::kWidth / 2 - kOuterInset;
+constexpr int kHighlightHeight = StereoModeToggle::kHeight - 2 * kOuterInset;
+constexpr int kGlyph = theme::kTouch ? 14 : 12;
 }  // namespace
 
 class StereoModeToggle::Segment : public Clickable {
@@ -68,7 +69,8 @@ void StereoModeToggle::paint(juce::Graphics& g) {
   const auto box = getLocalBounds().toFloat();
   paint::fill(g, box, kHeight / 2.0f, theme::kSurfaceRaised);
   const float x = kOuterInset + (stereoEnabled_ ? kHighlightWidth : 0);
-  paint::fill(g, {x, 4.0f, static_cast<float>(kHighlightWidth), static_cast<float>(kHighlightHeight)},
+  paint::fill(g, {x, static_cast<float>(kOuterInset), static_cast<float>(kHighlightWidth),
+                  static_cast<float>(kHighlightHeight)},
               kHighlightHeight / 2.0f, theme::kHighlight);
 }
 

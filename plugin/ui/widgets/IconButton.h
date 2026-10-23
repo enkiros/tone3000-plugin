@@ -24,6 +24,7 @@ public:
 
   explicit IconButton(Icon icon, int boxSize = theme::kIconBoxSize);
   IconButton(Icon icon, int boxSize, int glyphSize);
+  IconButton(const char* svg, int boxSize);
   IconButton(const char* svg, int boxSize, int glyphSize);
 
   void setIcon(Icon icon);

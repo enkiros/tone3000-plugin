@@ -80,7 +80,8 @@ public:
   }
   void setLit(bool lit) { lit_ = lit; repaint(); }
   void paintButton(juce::Graphics& g, bool, bool) override {
-    const auto box = juce::Rectangle<float>(14, 14).withCentre(getLocalBounds().toFloat().getCentre());
+    const auto glyph = static_cast<float>(theme::kPresetChevronGlyph);
+    const auto box = juce::Rectangle<float>(glyph, glyph).withCentre(getLocalBounds().toFloat().getCentre());
     Icons::draw(g, icon_, box, lit_ ? theme::kWhite : kMutedText);
   }
 
@@ -676,11 +677,13 @@ void PresetBar::paint(juce::Graphics& g) {
 
 void PresetBar::resized() {
   auto pill = getLocalBounds().removeFromLeft(kPillWidth).reduced(4, 0);
-  prev_->setBounds(pill.removeFromLeft(22));
-  next_->setBounds(pill.removeFromRight(22));
+  prev_->setBounds(pill.removeFromLeft(theme::kPresetChevronWidth));
+  next_->setBounds(pill.removeFromRight(theme::kPresetChevronWidth));
   name_->setBounds(pill);
-  save_.setBounds(kPillWidth + 8, (kHeight - 28) / 2, 28, 28);
-  newButton_.setBounds(kPillWidth + 8 + 28 + 8, (kHeight - 28) / 2, 28, 28);
+  const int box = theme::kTopBarButtonSize;
+  const int y = (kHeight - box) / 2;
+  save_.setBounds(kPillWidth + 8, y, box, box);
+  newButton_.setBounds(kPillWidth + 8 + box + 8, y, box, box);
 }
 
 }  // namespace t3k::ui

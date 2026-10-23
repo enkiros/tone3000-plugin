@@ -35,7 +35,7 @@ PluginHeader::PluginHeader(Services& services)
     : services_(services),
       logo_(std::make_unique<LogoLink>()),
       presetBar_(services),
-      tuner_(custom_icons::kTuningFork, 28, 18) {
+      tuner_(custom_icons::kTuningFork, theme::kTopBarButtonSize) {
   addAndMakeVisible(*logo_);
   addAndMakeVisible(presetBar_);
 
