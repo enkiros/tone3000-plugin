@@ -1385,6 +1385,11 @@ void TONE3000Processor::processChainOnBuffer(std::vector<std::unique_ptr<ChainBl
                                  !rtDualMono && block->convolverStereo != nullptr;
         auto& convolver = useStereoIr ? *block->convolverStereo : *block->convolverMono;
 
+        // Offline renders may be driven much faster than real time; the
+        // convolver then waits briefly for its tail worker instead of fading
+        // the tail (real-time hosts get the non-blocking fade path).
+        convolver.setNonRealtime(isNonRealtime());
+
         // Convolution runs at the base rate inside the block's island: when
         // the chain is oversampled the island decimates the wet path, hands
         // the convolver base-rate frames, and interpolates back (a direct

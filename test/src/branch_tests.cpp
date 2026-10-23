@@ -185,6 +185,9 @@ std::pair<std::vector<float>, std::vector<float>> runAmpIrSetup(bool branched,
   ChainTestProcessor proc;
   proc.setPlayConfigDetails(2, 2, kFs, kBlock);
   proc.prepareToPlay(kFs, kBlock);
+  // Offline-style render (faster than real time): long-IR tails must stay
+  // sample-exact, so let IrConvolver wait for its worker rather than fade.
+  proc.setNonRealtime(true);
 
   juce::ValueTree state("ChainSnapshot");
   state.setProperty("stereoEnabled", branched, nullptr);

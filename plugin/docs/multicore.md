@@ -108,6 +108,19 @@ tails hit denormal range at roughly 100x cost on workers, and the phase
 fork would break bit-identity with the serial loop, which runs under the
 audio thread's flags.
 
+## The IR tail worker is not in this pool
+
+`IrConvolver` owns a long-lived thread per long IR block; it is not an
+`RtWorkerPool` worker. The pool only runs jobs strictly inside one audio
+callback (a `forkJoin()` returns before the callback does), whereas the IR
+tail is deliberately one head-length (8192 samples, ~170 ms) behind the
+audio thread: its work has to outlive the callback that fed it. It follows
+the same principles: realtime start with a normal-priority fallback, no
+audio-thread wakeups (the worker polls its ring instead of being signalled),
+and a bounded failure mode (a late worker fades the tail out and back in
+rather than stalling the callback). See
+[`../../README.md`](../../README.md#ir-convolution-reverb-tails).
+
 ## Failure containment
 
 Exceptions can't cross threads, so a NAM phase job traps its own and the

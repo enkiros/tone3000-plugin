@@ -15,11 +15,6 @@ namespace {
 // convention); both drive the same engine split.
 inline constexpr int kIrShortMaxBaseSamples = 48000;
 
-// Bounded wait for the tail worker (see IrConvolver::process). In real time
-// the worker stays ahead of the audio thread, so this is never entered; it
-// only bounds a fast-driven render (tests) or a dead worker to silence.
-inline constexpr int kMaxTailWaitSpins = 1'000'000;
-
 // --- IR loading: the same read → trim → resample → gain pipeline
 // juce::dsp::Convolution runs internally, reproduced here so the kernel can
 // be split at kIrHeadSamples. Faithful to the pinned JUCE implementation
@@ -168,6 +163,10 @@ public:
         if (inW - inR < kIrTailBlockSamples)
           break;
 
+        // Test hook: simulate a descheduled worker (see setWorkerStallForTest).
+        if (const int stall = owner.workerStallMs.load(std::memory_order_relaxed); stall > 0)
+          juce::Thread::sleep(stall);
+
         for (int c = 0; c < kc; ++c)
           ringRead(owner.inputRing.getReadPointer(c), kIrTailRingSamples, inR,
                    localBuffer.getWritePointer(c), kIrTailBlockSamples);
@@ -189,8 +188,13 @@ public:
         didWork = true;
       }
       if (!didWork) {
-        owner.workerEvent.wait(50);
-        owner.workerEvent.reset();  // park until the next signal, don't spin
+        // Poll instead of sleeping on a signal: the audio thread must never
+        // touch a wait primitive (a WaitableEvent signal takes a pthread
+        // mutex). The poll is ~240 samples at 48 kHz, far inside the worker's
+        // ~165 ms of slack. stopWorker() still signals this event to wake us
+        // for shutdown from a non-RT thread.
+        owner.workerEvent.wait(kIrWorkerPollMs);
+        owner.workerEvent.reset();  // park until the next poll or shutdown
       }
     }
   }
@@ -204,7 +208,7 @@ private:
 IrConvolver::IrConvolver() {
   // The first kIrHeadSamples of output have no tail (the tail IR starts at
   // that offset), so they are "available" immediately; the ring is zeroed and
-  // adding zero there is a no-op. See the spin-wait in process().
+  // adding zero there is a no-op. See the fade margin in process().
   tailAvailable.store(kIrHeadSamples, std::memory_order_relaxed);
 }
 
@@ -286,6 +290,7 @@ void IrConvolver::prepare(const juce::dsp::ProcessSpec& spec) {
   inputWrite.store(0, std::memory_order_release);
   inputRead.store(0, std::memory_order_release);
   tailAvailable.store(kIrHeadSamples, std::memory_order_release);
+  resetUnderrunState();
   ensureRings();
 
   if (tailConvolver != nullptr)
@@ -302,9 +307,20 @@ void IrConvolver::reset() {
   inputWrite.store(0, std::memory_order_release);
   inputRead.store(0, std::memory_order_release);
   tailAvailable.store(kIrHeadSamples, std::memory_order_release);
+  resetUnderrunState();
   ensureRings();
   if (tailConvolver != nullptr)
     startWorker();
+}
+
+void IrConvolver::resetUnderrunState() {
+  tailUnderrunCount.store(0, std::memory_order_relaxed);
+  maxMissedSamples.store(0, std::memory_order_relaxed);
+  tailGain = 1.0f;
+  tailFadeRemaining = 0;
+  tailFadeStepDown = 0.0f;
+  tailFadeSamples = juce::jmax(1, juce::roundToInt(kIrTailFadeSeconds * kChainBaseSampleRate));
+  tailFadeStepUp = 1.0f / static_cast<float>(tailFadeSamples);
 }
 
 void IrConvolver::process(const juce::dsp::ProcessContextReplacing<float>& context) noexcept {
@@ -314,6 +330,8 @@ void IrConvolver::process(const juce::dsp::ProcessContextReplacing<float>& conte
   auto& block = context.getOutputBlock();
   const int blockChannels = static_cast<int>(block.getNumChannels());
   const int numSamples = static_cast<int>(block.getNumSamples());
+  if (numSamples <= 0)
+    return;
 
   int64_t outStart = 0;
   if (tailConvolver != nullptr) {
@@ -328,35 +346,103 @@ void IrConvolver::process(const juce::dsp::ProcessContextReplacing<float>& conte
                 block.getChannelPointer(c), numSamples);
 
     inputWrite.store(outStart + numSamples, std::memory_order_release);
-    if (inputWrite.load(std::memory_order_acquire) - inputRead.load(std::memory_order_acquire) >=
-        kIrTailBlockSamples)
-      workerEvent.signal();
+    // No signal to the worker here: a WaitableEvent signal takes a pthread
+    // mutex on the audio thread. The worker polls its ring instead.
   }
 
   headConvolver->process(context);
 
-  if (tailConvolver != nullptr) {
-    // Add the delayed tail output, channel for channel.
-    const int64_t need = outStart + numSamples;
-    // The tail for this block must already be produced. In real time the
-    // worker stays ~kIrHeadSamples ahead of the audio thread, so this holds
-    // immediately; the (bounded) wait only engages when the audio thread is
-    // driven faster than the worker can keep up — off-line renders and the
-    // test suite. A dead worker degrades to silence here, never a wedge.
-    int spins = 0;
-    while (tailAvailable.load(std::memory_order_acquire) < need && spins < kMaxTailWaitSpins) {
-      juce::Thread::yield();
-      ++spins;
+  if (tailConvolver == nullptr)
+    return;
+
+  const int64_t need = outStart + numSamples;
+
+  // Offline renders are driven faster than real time, so let the worker catch
+  // up (bounded) to keep the bounce sample-exact. Wait for the healthy margin,
+  // not just this block's need: the fade starts `tailFadeSamples` early, so
+  // waiting for `need` alone would still trip it during a fast render. Real-time
+  // hosts never take this path: waiting on the audio thread is what turned a
+  // late worker into a callback overrun.
+  const int64_t healthy =
+      need + static_cast<int64_t>(tailFadeSamples);
+  if (nonRealtime.load(std::memory_order_relaxed) &&
+      tailAvailable.load(std::memory_order_acquire) < healthy && worker != nullptr &&
+      worker->isThreadRunning()) {
+    const auto deadline = juce::Time::getMillisecondCounter() + kIrOfflineWaitMs;
+    while (tailAvailable.load(std::memory_order_acquire) < healthy &&
+           juce::Time::getMillisecondCounter() < deadline)
+      juce::Thread::sleep(1);
+  }
+
+  const int64_t avail = tailAvailable.load(std::memory_order_acquire);
+  const int64_t have =
+      juce::jlimit<int64_t>(0, static_cast<int64_t>(numSamples), avail - outStart);
+  const int haveInt = static_cast<int>(have);
+  const int64_t remaining = avail - outStart;
+
+  if (haveInt < numSamples) {
+    // The worker was late. Bounded strictly for diagnostics: the audio thread
+    // is the only writer of these two, so plain relaxed RMWs are enough.
+    tailUnderrunCount.fetch_add(1, std::memory_order_relaxed);
+    if (const int missed = numSamples - haveInt;
+        missed > maxMissedSamples.load(std::memory_order_relaxed))
+      maxMissedSamples.store(missed, std::memory_order_relaxed);
+  }
+
+  // Fade the tail out while there is still enough of it in the ring to reach
+  // zero before the data runs out, then fade back in once the worker is ahead
+  // again. Healthy means the whole block plus the fade margin is present; the
+  // margin guarantees the previous block had at least `tailFadeSamples` of
+  // tail left when the fade began (see kIrTailFadeSeconds).
+  const bool endangered =
+      remaining < static_cast<int64_t>(numSamples) + static_cast<int64_t>(tailFadeSamples);
+  if (endangered) {
+    if (tailFadeRemaining == 0 && tailGain > 0.0f) {
+      const int fadeN = static_cast<int>(juce::jlimit<int64_t>(
+          1, static_cast<int64_t>(tailFadeSamples), juce::jmax<int64_t>(1, remaining)));
+      tailFadeRemaining = fadeN;
+      tailFadeStepDown = tailGain / static_cast<float>(fadeN);
     }
-    const int64_t avail = tailAvailable.load(std::memory_order_acquire);
-    const int64_t have =
-        juce::jmax<int64_t>(0, juce::jmin<int64_t>(avail, need) - outStart);
-    const int mask = kIrTailRingSamples - 1;
-    for (int i = 0; i < have; ++i) {
+  } else {
+    tailFadeRemaining = 0;
+  }
+
+  const int addChannels = juce::jmin(numChannels, blockChannels);
+  const int mask = kIrTailRingSamples - 1;
+
+  // Common path: worker ahead, tail fully wet. Vector-style add, no ramp.
+  if (!endangered && tailGain >= 1.0f && haveInt == numSamples) {
+    for (int i = 0; i < numSamples; ++i) {
       const int pos = static_cast<int>((outStart + i) & mask);
-      for (int c = 0; c < blockChannels; ++c)
+      for (int c = 0; c < addChannels; ++c)
         block.getChannelPointer(c)[i] += outputRing.getReadPointer(c)[pos];
     }
+    return;
+  }
+
+  // Fading (in or out): advance the gain on every sample, including the ones
+  // past `have`, so a fade-out completes even when the ring data runs out
+  // mid-block. The missing samples are skipped; the ramp is what keeps the
+  // seam inaudible. While the tail is endangered, hold at zero after the
+  // fade-out rather than ramping back in mid-block.
+  for (int i = 0; i < numSamples; ++i) {
+    if (endangered) {
+      if (tailFadeRemaining > 0) {
+        tailGain = juce::jmax(0.0f, tailGain - tailFadeStepDown);
+        if (--tailFadeRemaining == 0 || tailGain <= 0.0f) {
+          tailGain = 0.0f;
+          tailFadeRemaining = 0;
+        }
+      }
+    } else if (tailGain < 1.0f) {
+      tailGain = juce::jmin(1.0f, tailGain + tailFadeStepUp);
+    }
+
+    if (i >= haveInt)
+      continue;
+    const int pos = static_cast<int>((outStart + i) & mask);
+    for (int c = 0; c < addChannels; ++c)
+      block.getChannelPointer(c)[i] += outputRing.getReadPointer(c)[pos] * tailGain;
   }
 }
 
@@ -386,10 +472,22 @@ void IrConvolver::warmUp(double seconds) {
 void IrConvolver::waitForTail() {
   if (tailConvolver == nullptr)
     return;
-  const int64_t target = inputWrite.load(std::memory_order_acquire);
+  // Wait for the worker's *published* output, not just inputRead: tailAvailable
+  // is stored after the ring write and after inputRead, so this is the value
+  // process() will see. The worker consumes whole kIrTailBlockSamples blocks,
+  // so target the last block it can actually have consumed.
+  const int64_t pushed = inputWrite.load(std::memory_order_acquire);
+  const int64_t consumable = (pushed / kIrTailBlockSamples) * kIrTailBlockSamples;
+  if (consumable <= 0)
+    return;
+  const int64_t target = consumable + kIrHeadSamples;
   for (int i = 0; i < 100000; ++i) {
-    if (inputRead.load(std::memory_order_acquire) >= target)
+    if (tailAvailable.load(std::memory_order_acquire) >= target)
       return;
+    // Non-RT caller (tests/loader): wake the polling worker immediately so a
+    // paced comparison does not pay the poll interval per block. The audio
+    // thread must never do this; see process().
+    workerEvent.signal();
     juce::Thread::sleep(1);
   }
 }
@@ -406,7 +504,18 @@ void IrConvolver::ensureRings() {
 void IrConvolver::startWorker() {
   if (worker == nullptr)
     worker = std::make_unique<TailWorker>(*this);
-  if (!worker->isThreadRunning())
+  if (worker->isThreadRunning())
+    return;
+
+  // Realtime where the platform allows it. On Linux without rtprio privileges
+  // (the Pi kiosk's normal case) the realtime start is refused and this falls
+  // back to a plain thread, just like RtWorkerPool. The tail worker is not
+  // hard-realtime: the fade in process() keeps a late wake-up inaudible.
+  const double frameMs = 1000.0 * kIrHeadSamples / kChainBaseSampleRate;
+  const double budgetMs = juce::jlimit(0.1, 40.0, frameMs);
+  const bool startedRealtime = worker->startRealtimeThread(
+      juce::Thread::RealtimeOptions{}.withPriority(10).withMaximumProcessingTimeMs(budgetMs));
+  if (!startedRealtime)
     worker->startThread(juce::Thread::Priority::highest);
 }
 

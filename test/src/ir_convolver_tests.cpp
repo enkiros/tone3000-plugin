@@ -15,6 +15,8 @@
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <juce_dsp/juce_dsp.h>
 
+#include <algorithm>
+#include <cmath>
 #include <memory>
 #include <vector>
 
@@ -202,6 +204,56 @@ TEST(IrConvolverTest, LongIrHasNoAddedLatency) {
   ASSERT_GT(peak, 1e-3f) << "reference impulse response is silent";
   EXPECT_LT(maxRelativeDiff(a, b, 0), 1e-4f)
       << "impulse response of the split deviates from the reference";
+}
+
+TEST(IrConvolverTest, LateWorkerFadesInsteadOfBlockingTheAudioThread) {
+  // A worker that misses its ~170 ms look-ahead used to (a) be waited for on
+  // the audio thread (up to a million yields) and (b) lose the missing tail
+  // samples with a hard step at the seam. The hardened path must return
+  // immediately, record the miss, and have faded the tail to zero before the
+  // ring data ran out.
+  constexpr int blockSize = 64;
+  constexpr int total = 48000;  // 1 s
+  const auto noise = makeNoise(total, 4, 0.25f);
+
+  auto split = makeSplit(testFile("reverb-ir-mono-test.wav"),
+                         juce::dsp::Convolution::Stereo::no, blockSize);
+  ASSERT_TRUE(split->isLong());
+
+  // Longer than the tail's 8192-sample (170 ms) look-ahead, so the audio
+  // thread is guaranteed to reach samples the stalled worker has not made.
+  split->setWorkerStallForTest(250);
+
+  juce::AudioBuffer<float> buffer(2, total);
+  buffer.copyFrom(0, 0, noise.data(), total);
+  buffer.copyFrom(1, 0, noise.data(), total);
+
+  const auto start = juce::Time::getMillisecondCounterHiRes();
+  for (int off = 0; off < total; off += blockSize) {
+    const int frames = std::min(blockSize, total - off);
+    juce::dsp::AudioBlock<float> block(buffer.getArrayOfWritePointers(), 2,
+                                       static_cast<size_t>(off), static_cast<size_t>(frames));
+    split->process(juce::dsp::ProcessContextReplacing<float>(block));
+  }
+  const double elapsedMs = juce::Time::getMillisecondCounterHiRes() - start;
+
+  split->setWorkerStallForTest(0);
+
+  // No per-miss wait on the audio thread: 1 s of audio renders in a few ms
+  // even though the worker is asleep for 250 ms. (The old spin took ~10 ms
+  // per missed block, i.e. seconds across this loop.)
+  EXPECT_LT(elapsedMs, 1000.0) << "audio thread waited for the stalled worker";
+  EXPECT_GT(split->getTailUnderrunCount(), 0u) << "the stall never produced a miss";
+  EXPECT_GT(split->getMaxMissedSamples(), 0) << "diagnostics did not record a miss";
+  EXPECT_LT(split->getTailGain(), 1.0f) << "tail stayed fully wet across a worker stall";
+
+  for (int ch = 0; ch < 2; ++ch)
+    for (int i = 0; i < total; ++i)
+      ASSERT_TRUE(std::isfinite(buffer.getSample(ch, i))) << "non-finite sample after a miss";
+
+  // Let the (now unstalled) worker finish so teardown is quick and the next
+  // test starts from a clean thread.
+  split->waitForTail();
 }
 
 }  // namespace

@@ -80,6 +80,13 @@ with the factor). Each IR block therefore runs inside a "base-rate island":
 convolves there, and interpolates back. IR CPU and sound are identical at
 every factor (`IrConvolutionTest.IslandedConvolutionInOversampledChainMatchesBaseRate`).
 
+The island only fixes the rate; the kernel itself is convolved by
+`IrConvolver`, which splits the head/tail for long IRs (see
+[`../../README.md`](../../README.md#ir-convolution-reverb-tails)).
+The convolver's prepared block is capped at 256 frames regardless of the
+host's promised maximum (`irConvolverBlockSizeFor()`), and the RT path chunks
+the island's base-rate frames to match (`processConvolverInChunks()`).
+
 ## Frame-count contract
 
 Every base-rate input frame becomes exactly `factor` chain frames, and the

@@ -381,6 +381,42 @@ Meters tap the signal after input gain (input meters, pre-gate), after each
 block's In Gain plus its PRE-position EQ and after its final stage (block
 LEDs), and after output gain (output meters).
 
+### IR convolution (reverb tails)
+
+IRs always convolve at the 48 kHz base rate inside the block's island (see the
+oversampling bullet above and
+[`plugin/docs/oversampling.md`](plugin/docs/oversampling.md)), and every IR
+block is convolved by `IrConvolver` (`plugin/include/IrConvolver.h`), not by
+`juce::dsp::Convolution` directly.
+
+- **Why the split.** JUCE's `NonUniform{8192}` engine keeps the first 8192
+  kernel samples on the audio thread but computes the rest as one FFT batch
+  every 8192 input samples (~170 ms). At a 64- or 128-sample host block that
+  single batch misses the callback deadline and long/plate reverbs pop.
+  `IrConvolver` keeps the first 8192 samples (the "head") on the audio thread
+  as a zero-latency engine and moves the remaining tail to a worker; the
+  worker's output is added exactly 8192 samples later, where the head ends.
+  Same convolution, zero added latency, no truncation. Short (cab-length) IRs
+  keep a single engine and spawn no worker.
+- **Bounded FFT work.** Convolvers are prepared at
+  `min(host base block, 256)` (`irConvolverBlockSizeFor()`) and fed in pieces
+  of at most 256 frames (`processConvolverInChunks()`), so a host that
+  advertises a large maximum block (or over-promises it) cannot inflate every
+  callback; hosts at or below 256 keep the partition they always had.
+- **Real-time contract.** The audio thread never waits for the worker and
+  never signals it (`WaitableEvent` takes a pthread mutex). The worker polls
+  its input ring. If it is late, the delayed tail is faded out — started while
+  at least 10 ms of tail data is still buffered — and faded back in when the
+  worker recovers, so a deschedule costs a short reverb duck at worst, never a
+  click or a callback overrun. The worker starts as a realtime thread where
+  the platform allows it (normal priority otherwise, e.g. Linux without
+  rtprio). `getTailUnderrunCount()` and `getMaxMissedSamples()` count misses
+  for diagnostics.
+- **Offline renders** (`AudioProcessor::isNonRealtime`) get a bounded (50 ms
+  per `process()` call) catch-up wait instead of the fade, so a bounce
+  reproduces the tail sample-exactly even when driven much faster than real
+  time. Tests that render faster than real time declare the same mode.
+
 ### Settings and where they live
 
 Every setting belongs to exactly one of these stores, which decides what
@@ -428,6 +464,14 @@ IR assets in `test/files`:
 
 - `dsp_tests.cpp`: unit-level behavior (oversampler null/transparency/
   aliasing, NAM phase-interleaving exactness, IR island equivalence).
+- `ir_convolver_tests.cpp`: the head/tail split (short IRs use no worker;
+  long IRs match a JUCE `NonUniform` reference at every host block size, mono
+  and true stereo; no added latency) and the late-worker contract (the audio
+  thread does not wait, misses are counted, and the tail fades instead of
+  stepping).
+- `ir_block_size_tests.cpp`: the 256-frame convolver cap policy, IR CPU not
+  scaling with the host's promised maximum block, and processor-level sound
+  identical across promised and actually delivered block sizes.
 - `processor_tests.cpp`: drives the full `TONE3000Processor` the way a host
   would (48 kHz transparency with zero latency, reported PDC matching the
   measured delay at 44.1/96 kHz, latency stability across oversampling
@@ -448,7 +492,7 @@ IR assets in `test/files`:
 
 ```sh
 ./script/test-dsp.sh                        # build + run everything
-./script/test-dsp.sh 'IrConvolutionTest.*'  # gtest filter
+./script/test-dsp.sh 'Ir*Test.*'            # IR convolution, split and block-size suites
 ```
 
 `test/src/os_bench.cpp` is a standalone CPU benchmark for the oversampled NAM

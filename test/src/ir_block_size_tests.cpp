@@ -41,6 +41,10 @@ std::unique_ptr<ChainTestProcessor> makeIrProcessor(const char* irFile, const ju
   auto proc = std::make_unique<ChainTestProcessor>();
   proc->setPlayConfigDetails(2, 2, kFs, promisedBlock);
   proc->prepareToPlay(kFs, promisedBlock);
+  // This rig is driven as fast as the test can push blocks (an offline-style
+  // render). Tell the processor so IrConvolver waits for its tail worker and
+  // the render stays sample-exact instead of fading on a worker miss.
+  proc->setNonRealtime(true);
 
   juce::ValueTree state("ChainSnapshot");
   juce::ValueTree lane("ChainBlocks");

@@ -92,13 +92,18 @@ anchors in `CMakeLists.txt`; do not "fix" the tree by editing `libs/juce`.
 - `plugin/include/IrConvolver.h` splits the kernel exactly: the first
   `kIrHeadSamples` (8192) stay on the audio thread as a zero-latency
   `juce::dsp::Convolution`; the rest (`NonUniform{8192}`) runs on a worker in
-  `kIrTailBlockSamples` (1024) blocks and is added exactly 8192 samples later,
+  `kIrTailBlockSamples` (256) blocks and is added exactly 8192 samples later,
   where the head ends. Same convolution, zero added latency, no truncation.
   Short (cab) IRs keep a single engine and spawn no worker.
 - **Don't move the tail back onto the audio thread** to "simplify" — that
-  reintroduces the spike. The worker has ~150 ms of slack and costs a few % of
-  a core; `process()` has a bounded wait so fast-driven renders (tests/offline)
-  still produce the full tail.
+  reintroduces the spike. The worker has ~165 ms of slack and costs a few % of
+  a core. Real-time `process()` never waits for it: if the worker is late the
+  tail fades out and back in (`kIrTailFadeSeconds`) instead of stepping, and
+  the worker polls its ring rather than being signalled from the audio thread.
+  Offline renders (`AudioProcessor::isNonRealtime`) get a bounded wait instead
+  so a bounce stays sample-exact. Tests that render faster than real time must
+  call `setNonRealtime(true)` to compare tails sample-exactly;
+  `getTailUnderrunCount()` / `getMaxMissedSamples()` report worker misses.
 - **`Stereo::no` is not a fan-out.** JUCE applies the mono kernel to *each*
   input channel independently, so the tail worker must copy/add every channel.
   Channel-0-only leaks the left take into the right and breaks dual mono's

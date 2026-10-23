@@ -105,6 +105,9 @@ std::unique_ptr<ChainTestProcessor> makeRig(const juce::ValueTree& state, InputM
   auto proc = std::make_unique<ChainTestProcessor>();
   proc->setPlayConfigDetails(inChannels, outChannels, kFs, kBlock);
   proc->prepareToPlay(kFs, kBlock);
+  // Rendered faster than real time: keep long-IR tails sample-exact rather
+  // than fading them when the worker lags (see IrConvolver).
+  proc->setNonRealtime(true);
   proc->restoreFromTree(state);
   EXPECT_TRUE(waitForChainLoaded(*proc)) << "blocks never finished loading from cache";
   proc->setInputMode(mode);
