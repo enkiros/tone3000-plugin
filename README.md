@@ -64,8 +64,9 @@ fetched at configure time. `-DT3K_BUILD_UI_TESTBED=ON` adds the UI testbed
 (`UiTestbed`: scenario captures, pixel diffs, `--selftest`, `--bench`) and
 registers its self-tests with ctest; see
 [`plugin/ui/README.md`](plugin/ui/README.md). `-DT3K_TOUCH_UI=ON` enlarges the
-chrome controls, knobs and the faceplate for coarse-pointer touch targets (the
-1024×600 Pi kiosk); without it the compact desktop sizing is built.
+chrome controls, knobs and the faceplate for coarse-pointer touch targets and
+lays the UI out 600px tall to fill the 1024×600 Pi kiosk; without it the
+compact desktop sizing (578px tall) is built.
 
 ```sh
 cmake -B build -S . -DCMAKE_BUILD_TYPE=Release   # or Debug

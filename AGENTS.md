@@ -27,8 +27,11 @@ tripwires.
   ```
 - Format/target toggles: `-DHEADLESS=ON`, `-DBUILD_AAX=OFF`, `-DBUILD_LV2=OFF`,
   `-DBUILD_CLAP=OFF`, `-DT3K_BUILD_UI_TESTBED=ON`. The Pi kiosk adds
-  `-DT3K_TOUCH_UI=ON` (enlarges knobs, chrome and the faceplate for coarse
-  pointers; `kPlateHeight` grows 108→120 and the main screen shrinks to match).
+  `-DT3K_TOUCH_UI=ON`, which defines `T3K_UI_COARSE_POINTER`: knobs, chrome and
+  the faceplate grow for coarse pointers (`kPlateHeight` 108→120), the design
+  box becomes 1024×600 instead of 1024×578 (`Design.h` `kHeight`), and
+  `maxStartScale()` drops the 40px title-bar allowance (the kiosk is
+  fullscreen). Do not add a separate kiosk flag for any of this.
 - **On the Pi, build the standalone only:** `cmake --build build --target
   TONE3000_Standalone -j4` with the format toggles above; the first build is
   long on 4 GB RAM / 4 cores (drop to `-j2` if linking runs out of memory).
@@ -107,6 +110,8 @@ anchors in `CMakeLists.txt`; do not "fix" the tree by editing `libs/juce`.
   cmake -S plugin/ui/testbed -B build-ui -DCMAKE_BUILD_TYPE=Debug
   cmake --build build-ui -j4
   ```
+  For the kiosk layout (1024×600), configure a separate dir with
+  `-DT3K_TOUCH_UI=ON` (e.g. `build-ui-kiosk`).
   Run the binary with `--selftest`, `--scenario <id>`, `--capture`,
   `--compare`, or `--bench`. Scenario ids come from
   `testbed/fixtures/scenarios.json`.
@@ -118,9 +123,11 @@ anchors in `CMakeLists.txt`; do not "fix" the tree by editing `libs/juce`.
 - **Presets are binary.** `*.t3kpreset` files are magic-prefixed ValueTree
   streams (`.gitattributes` marks them binary). Never diff, merge, or edit them
   as text; regenerate via `tools/` (`PresetTool`).
-- **UI is laid out in a fixed 1024×578 design space**; `NativeEditor` applies a
-  single `AffineTransform`. Never scale per-view by hand. (The kiosk target is
-  1024×600.)
+- **UI is laid out in a fixed design space**; `NativeEditor` applies a single
+  `AffineTransform`. Never scale per-view by hand. The box is 1024×578 on
+  desktop/iOS/Android and 1024×600 on the kiosk build (`Design.h` `kHeight`,
+  keyed on `T3K_UI_COARSE_POINTER`, not on `kCoarsePointer`); the main band
+  absorbs the difference (`600 − 64 header − 120 plate = 416`).
 - **UI data flow**: `NativeEditor` → `Services` → `PluginRoot` → views. Stores
   are the *only* callers of `Backend`; views subscribe to stores. No singletons
   or globals beyond `core/` constexpr tables.

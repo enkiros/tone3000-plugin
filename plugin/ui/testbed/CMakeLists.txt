@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(UiTestbed VERSION 1.0 LANGUAGES C CXX)
 
-option(T3K_TOUCH_UI "Enlarge chrome controls for coarse-pointer touch builds (7\" kiosk)" OFF)
+option(T3K_TOUCH_UI "Coarse-pointer kiosk build: enlarge chrome and lay out 1024x600 (7\" Pi kiosk)" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

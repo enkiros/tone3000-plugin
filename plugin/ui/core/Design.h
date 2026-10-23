@@ -16,8 +16,18 @@ namespace t3k::ui::design {
 inline int snap(float v) { return static_cast<int>(std::lround(v)); }
 
 inline constexpr int kWidth = 1024;
-// Core UI height (content only; Figma's 600 includes a 22px mock title bar).
+// Core UI height (content only). The Figma canvas is 600, of which 22px is a
+// mock title bar. The 1024x600 kiosk has no title bar, so the kiosk build
+// (T3K_TOUCH_UI, which defines T3K_UI_COARSE_POINTER) reclaims it and lays
+// out 600 tall. Everything else stays 578 (desktop/iOS/Android still have OS
+// chrome or letterbox). Keyed on the macro, not kCoarsePointer: iOS/Android
+// reach kCoarsePointer via JUCE_IOS/JUCE_ANDROID below without defining the
+// macro, so they keep 578.
+#if defined(T3K_UI_COARSE_POINTER)
+inline constexpr int kHeight = 600;
+#else
 inline constexpr int kHeight = 578;
+#endif
 
 // Platform flags, known at compile time. kCoarsePointer is a touch
 // platform (no hover, ever); it fixes the hint copy and seeds

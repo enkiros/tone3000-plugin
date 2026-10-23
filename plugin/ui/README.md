@@ -34,6 +34,9 @@ $UI --selftest                               # unit tests: pure logic + the focu
 $UI --bench [--seconds 10] [--json out.json] [phase…]   # CPU / memory under load (--list for the phases)
 ```
 
+Add `-DT3K_TOUCH_UI=ON` (in a separate build dir, e.g. `build-ui-kiosk`) to
+render the 1024×600 kiosk layout instead of the 1024×578 desktop box.
+
 On Linux, pass the project's toolchain file to the root configure:
 
 ```sh
@@ -162,7 +165,10 @@ from (`port of KnobControl.tsx`); that is lineage, recorded in
 
 ## Conventions
 
-- **Design space.** Everything is laid out in the 1024 × 578 design box;
+- **Design space.** Everything is laid out in the 1024 × 578 design box
+  (`core/Design.h` `kHeight`; 1024 × 600 on the kiosk build, which has no OS
+  title bar to exclude, selected by `T3K_TOUCH_UI` via
+  `T3K_UI_COARSE_POINTER`);
   `NativeEditor` applies one `AffineTransform`. Never scale by hand. The one
   view that holds its size on screen instead (the tone browser's body, so a
   bigger window shows more results) counter-scales by `Services::zoom`, the

@@ -47,8 +47,10 @@ Non-goals
   lineage: the reason a number is what it is. New components need no such
   note.
 - **1 design px = 1 JUCE logical unit.** The root component is laid out in
-  the fixed `1024 × 578(+chrome)` design space and scaled with one
-  `AffineTransform`; children never see the scale (mirrors `useUiScale`).
+  the fixed `1024 × 578(+chrome)` design space (1024 × 600 on the kiosk
+  build, which reclaims the 22px title-bar strip of the Figma mock) and
+  scaled with one `AffineTransform`; children never see the scale (mirrors
+  `useUiScale`).
 - **The UI never touches audio state directly.** All reads/writes go through
   `ui::Backend` (the C++ twin of `IAudioBackend`), implemented by
   `ProcessorBackend` in the plugin and `MockBackend` in the testbed.
@@ -172,7 +174,9 @@ Widgets know nothing about services; views wire widgets to services.
 `root.setTransform(AffineTransform::scale(s))`, then centres. Mouse
 coordinates are transformed by JUCE. Text rendered through a scale transform
 uses the platform rasteriser at the final size, so glyphs stay crisp.
-`designH = 578 + bannerHeight + hintBarDelta`, mirroring `extraContentHeight`.
+`designH = kHeight + bannerHeight + hintBarDelta`, mirroring
+`extraContentHeight` (`kHeight` is 578, or 600 on the 1024×600 kiosk build,
+which has no title bar to reserve; see `core/Design.h`).
 
 The shell also publishes `s` as `Services::zoom`. The tone browser's body
 (everything under the ← SELECT TONE row) subscribes and counter-scales by it
@@ -568,6 +572,10 @@ tree. The testbed (`plugin/ui/testbed`) is what remains, and it is the UI's
 own tool now: the fixtures it once imported are its own data, and captures
 are diffed against earlier captures (before/after a change) rather than
 against another renderer.
+
+Configure a separate build dir with `-DT3K_TOUCH_UI=ON` (e.g.
+`build-ui-kiosk`) to capture the 1024×600 kiosk layout instead of the
+1024×578 desktop box; the captures are then 2048×1200 at 2×.
 
 - `UiTestbed --capture <outDir> [--ref <beforeDir>] [scenarioFilter]` builds
   `PluginRoot` over `MockBackend` for each scenario, applies its drive steps

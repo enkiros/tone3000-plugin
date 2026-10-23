@@ -2,11 +2,13 @@
 // tuner takeover), faceplate (the tone browser and the sign-in screen take
 // over both), and the overlay layer for popovers, the toast,
 // banners and modals. Laid out in design space
-// (1024 x 578 + chrome strips); the shell scales the whole thing.
+// (1024 x 578 + chrome strips; 600 tall on the kiosk build, see
+// core/Design.h kHeight); the shell scales the whole thing.
 //
-// The chrome strips grow the window instead of squishing the 578px core, so
-// the banner's arrival is choreographed against the window resize
-// (useChromeChoreography) so the content column moves once, not twice:
+// The chrome strips grow the window instead of squishing the core (578px, or
+// 600 on the kiosk build), so the banner's arrival is choreographed against
+// the window resize (useChromeChoreography) so the content column moves once,
+// not twice:
 //
 //   hidden --banner appears--> waiting: the window grows first (the new
 //     space is at the bottom edge, black on black; content stays put)

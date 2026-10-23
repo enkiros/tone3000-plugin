@@ -15,6 +15,9 @@ covers building, launching, and verifying that on a Raspberry Pi 5 kiosk.
 - squeekboard is an **overlay** — it covers the bottom ~205 px of the 1024×600
   panel instead of resizing the window. The UI keeps a focused text field
   scrolled above it via the `T3K_OSK_HEIGHT` inset (see below).
+- The kiosk build (`-DT3K_TOUCH_UI=ON`) lays the UI out in a 1024×600 design
+  box (desktop is 1024×578), so at 1x it fills the panel with no letterbox;
+  `T3K_OSK_HEIGHT` is in design px either way.
 
 ## Prerequisites (already present on RPiOS Trixie)
 
@@ -34,6 +37,7 @@ git submodule update --init --recursive
 cmake -S . -B build -G Ninja \
   -DCMAKE_TOOLCHAIN_FILE="$PWD/cmake/linux-toolchain.cmake" \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DT3K_TOUCH_UI=ON \
   -DBUILD_AAX=OFF -DBUILD_LV2=OFF -DBUILD_CLAP=OFF
 cmake --build build --target TONE3000_Standalone -j4
 # binary: build/plugin/TONE3000_artefacts/RelWithDebInfo/Standalone/TONE3000
@@ -70,8 +74,8 @@ grep -E 'zwp_text_input_v3#.*(enable|disable|set_cursor_rectangle|commit_string)
 grim /tmp/osk.png
 ```
 
-Expected: `enable` + `set_cursor_rectangle` on focus (the caret y should sit
-above ~373 so the field is not under the keyboard), `commit_string` per key,
+Expected: `enable` + `set_cursor_rectangle` on focus (caret y above the
+keyboard's top edge, ~395 on the 1024×600 panel), `commit_string` per key,
 `disable` on blur, and `Visible` flipping `false ↔ true`.
 
 ## Troubleshooting

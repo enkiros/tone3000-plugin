@@ -125,7 +125,13 @@ double NativeEditor::maxStartScale() const {
   // Fit the standalone window into the primary display's usable area, with
   // headroom for the native title bar (GitHub issue #43; Mutter's 2x title
   // bar is 37 logical px). Floor at 1.0: the design box is the hard minimum.
+  // The kiosk build runs fullscreen on a 1024x600 panel with no OS title bar,
+  // so there is nothing to reserve above the window.
+#if defined(T3K_UI_COARSE_POINTER)
+  constexpr int titleBarAllowance = 0;
+#else
   constexpr int titleBarAllowance = 40;
+#endif
   const double fitW = display->userBounds.getWidth() / static_cast<double>(design::kWidth);
   const double fitH =
       (display->userBounds.getHeight() - titleBarAllowance) / static_cast<double>(designHeight());

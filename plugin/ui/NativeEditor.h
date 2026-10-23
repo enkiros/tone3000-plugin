@@ -1,8 +1,8 @@
 // The plugin's editor: owns the backend, the services and the PluginRoot,
-// and manages the window box: the 1024 x
-// 578(+chrome) design box times an aspect-locked user scale between 1x and
-// kMaxScale, persisted on the processor, grown by the chrome strips' height
-// on request.
+// and manages the window box: the 1024-wide design box (578 tall, or 600 on
+// the 1024x600 kiosk build; see core/Design.h kHeight) times an
+// aspect-locked user scale between 1x and kMaxScale, persisted on the
+// processor, grown by the chrome strips' height on request.
 //
 // The root is laid out in design space and scaled with one AffineTransform:
 // top-anchored and horizontally centred in whatever box the host actually
